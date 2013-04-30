@@ -1,35 +1,38 @@
 var keen = require('../index.js');
 
-var api = keen.api('<api_key>');
-var token = '<project_token>';
+var keen = keen.configure({
+    projectId: "<project_id>",
+    readKey: "<read_key>"
+});
+var projectId = '<project_id>';
 var collection = '<event_collection>';
 var property = '<property_name>';
 
 /*
 // Not Yet Implemented
 
-api.queries.list(token, function(err, res) {
+keen.queries.list(projectId, function(err, res) {
 	console.log('queries.list', err, res);
 });
 
-api.queries.perform(token, collection, 'count', {}, function(err, res) {
+keen.queries.perform(projectId, collection, 'count', {}, function(err, res) {
 	console.log('queries.perform', err, res);
 });
 
-api.queries.extraction(token, collection, {}, function(err, res) {
+keen.queries.extraction(projectId, collection, {}, function(err, res) {
 	console.log('queries.extraction', err, res);
 });
 
-api.queries.funnel();
+keen.queries.funnel();
 
-api.queries.saved.list();
+keen.queries.saved.list();
 
-api.queries.saved.view();
+keen.queries.saved.view();
 
-api.queries.saved.insert();
+keen.queries.saved.insert();
 
-api.queries.saved.remove();
+keen.queries.saved.remove();
 
-api.queries.saved.results();
+keen.queries.saved.results();
 
 */

@@ -1,6 +1,6 @@
 {
   "name": "keen.io",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Keen IO NodeJS module. Keen IO is a hosted API to collect, analyze, and visualize your data.",
   "homepage": "https://github.com/keenlabs/KeenClient-Node",
   "bugs": {
@@ -24,7 +24,7 @@
   ],
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
@@ -47,5 +47,10 @@
   "dependencies": {
     "superagent": "~0.13.0",
     "underscore": "~1.4.4"
+  },
+  "devDependencies": {
+    "mocha": "~1.9.0",
+    "should": "~1.2.2",
+    "nock": "~0.17.5"
   }
 }

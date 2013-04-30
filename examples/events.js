@@ -1,11 +1,8 @@
 var keen = require('../index.js');
 
-var api = keen.api('<api_key>');
-var token = '<project_token>';
-
-// Get events in project
-api.events.list(token, function(err, res) {
-	console.log('events.list', err, res);
+var keen = keen.configure({
+	projectId: "<project_id>",
+	writeKey: "<write_key>"
 });
 
 // Construct same events
@@ -36,6 +33,6 @@ var events = [
 	}
 ];
 // Send events to project
-api.events.insert(token, events, function(err, res) {
+keen.addEvents(events, function(err, res) {
 	console.log('events.insert', err, res);
 });

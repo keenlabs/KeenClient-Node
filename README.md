@@ -13,8 +13,13 @@ Keen IO is an online service to collect, analyze, and visualize your data.
 ```javascript
 var keen = require('keen.io');
 
-// Configure instance with API Key
-var api = keen.api('<api_key>');
+// Configure instance. Only projectId and writeKey are required to send data.
+var keen = keen.configure({
+	projectId: "<project_id>",
+	writeKey: "<write_key>",
+	readKey: "<read_key>",
+	masterKey: "<master_key>"
+});
 ```
 
 You can also have multiple instances if you are connecting to multiple KeenIO accounts in the one project (probably edge case).
@@ -23,8 +28,8 @@ You can also have multiple instances if you are connecting to multiple KeenIO ac
 var keen = require('keen.io');
 
 // Configure instance with API Key
-var api1 = keen.api('<api_key_1>');
-var api2 = keen.api('<api_key_2>');
+var keen1 = keen.configure({...});
+var keen2 = keen.configure({...});
 ```
 
 In the future there will be the ability to pass options into the initialisation such as batching inserts, etc. The structure of this hasn't been defined yet but will look something like the following.
@@ -33,111 +38,40 @@ In the future there will be the ability to pass options into the initialisation 
 var keen = require('keen.io');
 
 // Configure instance with API Key and options
-var api = keen.api('<api_key>', { batchEventInserts: 30 });
-```
-
-### Projects Resourcce
-
-```javascript
-var keen = require('keen.io');
-var api = keen.api('<api_key>');
-
-var token = '<project_token>';
-
-// Get projects list
-api.projects.list(function(err, projects) {
-	console.log('projects.list', err, projects);
-});
-
-// Get single project info
-api.projects.view(token, function(err, res) {
-	console.log('projects.view', err, res);
+var keen = keen.configure({ 
+	projectId: "<project_id>",
+	batchEventInserts: 30 
 });
 ```
 
-### Events Resourcce
+### Send Events
 
 ```javascript
-var keen = require('keen.io');
-var api = keen.api('<api_key>');
-
-var token = '<project_token>';
-
-// Get events in project
-api.events.list(token, function(err, res) {
-	console.log('events.list', err, res);
+var keen = require("keen.io");
+var keen = keen.configure({
+	projectId: "<project_id>",
+	writeKey: "<write_key>"
 });
 
-// Send events to project
-var events = [
-	{
-		collection: 'test',
-		data: {
-			name: 'Fred',
-			age: 30
-		},
-		keen: {
-			timestamp: new Date(0)
-		}
-	},
-	{
-		collection: 'test',
-		data: {
-			name: 'John',
-			age: 40
-		}
-	},
-	{
-		collection: 'test2',
-		data: {
-			name: 'John Smith',
-			age: 20
-		}
+// send single event to Keen IO
+keen.addEvent("my event collection", {"property name": "property value"}, function(err, res) {
+	if (err) {
+		console.log("Oh no, an error!");
+	} else {
+		console.log("Hooray, it worked!");
 	}
-];
-api.events.insert(token, events, function(err, res) {
-	console.log('events.insert', err, res);
-});
-```
-
-### Properties Resourcce
-
-```javascript
-var keen = require('keen.io');
-var api = keen.api('<api_key>');
-
-var token = '<project_token>';
-var collection = '<event_collection>';
-var property = '<property_name>';
-
-api.properties.view(token, collection, property, function(err, res) {
-	console.log('properties.view', err, res);
 });
 
-// Removes property for all events in collection
-api.properties.remove(token, collection, property, function(err, res) {
-	console.log('properties.remove', err, res);
-});
-```
-
-### Collections Resourcce
-
-```javascript
-var keen = require('keen.io');
-var api = keen.api('<api_key>');
-
-var token = '<project_token>';
-var collection = '<event_collection>';
-
-// Get collection schema
-api.collections.view(token, collection, function(err, res) {
-	console.log('collection.view', err, res);
-});
-
-// Removes collection
-// This is irreversible and will only work for collections under 10k events.
-api.collections.remove(token, collection, function(err, res) {
-	console.log('collection.remove', err, res);
+// send multiple events to Keen IO
+keen.addEvents({
+	"my first event collection": [{"property name": "property value"}, ...],
+	"my second event collection": [{"property name2": "property value 2"}]
+}, function(err, res) {
+	if (err) {
+		console.log("Oh no, an error!");
+	} else {
+		console.log("Hooray, it worked!");
+	}
 });
 ```
 
@@ -156,6 +90,11 @@ Keen IO - Website: https://keen.io/
 Keen IO - API Technical Reference: https://keen.io/docs/api/reference/
 
 ## Release History
+
+### 0.0.1
+
+- Add write/read keys.
+- Reworked interface - not backwards compatible with 0.0.0!
 
 ### 0.0.0
 
