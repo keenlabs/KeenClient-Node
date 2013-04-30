@@ -1,5 +1,7 @@
 # Keen IO - NodeJS
 
+[![Build Status](https://travis-ci.org/keenlabs/KeenClient-Node.png)](https://travis-ci.org/keenlabs/KeenClient-Node)
+
 Keen IO is an online service to collect, analyze, and visualize your data.
 
 ## Getting Started
