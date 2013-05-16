@@ -114,7 +114,7 @@ function KeenApi(config) {
 
 	this.addEvent = function(eventCollection, event, callback) {
 		if (!this.writeKey) {
-			var errorMessage = "You must specify a 'writeKey' in your 'config' object when calling keen.configure()!";
+			var errorMessage = "You must specify a non-null, non-empty 'writeKey' in your 'config' object when calling keen.configure()!";
 			var error = new Error(errorMessage);
 			if (callback) {
 				callback(error);
@@ -129,7 +129,7 @@ function KeenApi(config) {
 
 	this.addEvents = function(events, callback) {
 		if (!this.writeKey) {
-			var errorMessage = "You must specify a 'writeKey' in your 'config' object when calling keen.configure()!";
+			var errorMessage = "You must specify a non-null, non-empty 'writeKey' in your 'config' object when calling keen.configure()!";
 			var error = new Error(errorMessage);
 			if (callback) {
 				callback(error);

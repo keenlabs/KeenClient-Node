@@ -93,6 +93,10 @@ Keen IO - API Technical Reference: https://keen.io/docs/api/reference/
 
 ## Release History
 
+### 0.0.2
+
+- Change error for blank write key.
+
 ### 0.0.1
 
 - Add write/read keys.

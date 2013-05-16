@@ -84,7 +84,7 @@ describe("keen", function() {
 
         keen.addEvent("eventCollection", {}, function(error, responseBody) {
             should.exist(error);
-            error.message.should.equal("You must specify a 'writeKey' in your 'config' object when calling keen.configure()!");
+            error.message.should.equal("You must specify a non-null, non-empty 'writeKey' in your 'config' object when calling keen.configure()!");
             done();
         });
     });
