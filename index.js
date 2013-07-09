@@ -1,5 +1,6 @@
 var rest = require('superagent');
 var _ = require('underscore');
+var crypto = require('crypto');
 
 function KeenApi(config) {
 	if (!config) {
@@ -147,6 +148,30 @@ function configure(config) {
 	return new KeenApi(config);
 }
 
+function encryptScopedKey(apiKey, options) {
+	var iv = crypto.randomBytes(16);
+	var cipher = crypto.createCipheriv("aes-256-cbc", apiKey, iv);
+	var jsonOptions = JSON.stringify(options);
+	var encryptOutput1 = cipher.update(jsonOptions, "utf8");
+	var encryptOutput2 = cipher.final();
+	var ivPlusEncrypted = iv.toString("hex") + encryptOutput1.toString("hex") + encryptOutput2.toString("hex");
+	return ivPlusEncrypted;
+}
+
+function decryptScopedKey(apiKey, scopedKey) {
+	var hexedIv = scopedKey.substring(0, 32);
+	var hexedCipherText = scopedKey.substring(32, scopedKey.length);
+	var iv = new Buffer(hexedIv, "hex");
+	var cipherText = new Buffer(hexedCipherText, "hex");
+	var decipher = crypto.createDecipheriv("aes-256-cbc", apiKey, iv);
+	var decryptOutput1 = decipher.update(cipherText);
+	var decryptOutput2 = decipher.final();
+	var decrypted = decryptOutput1 + decryptOutput2;
+	return JSON.parse(decrypted);
+}
+
 module.exports = {
-	configure: configure
+	configure: configure,
+	encryptScopedKey: encryptScopedKey,
+	decryptScopedKey: decryptScopedKey
 };

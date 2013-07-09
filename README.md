@@ -77,6 +77,24 @@ keen.addEvents({
 });
 ```
 
+### Generate Scoped Key
+```javascript
+var keen = require("keen.io");
+var apiKey = "YOUR_API_KEY";
+var scopedKey = keen.encryptScopedKey(apiKey, {
+	"allowed_operations": ["read"],
+	"filters": [{
+		"property_name": "account.id",
+		"operator": "eq",
+		"property_value": "123"
+	}]
+});
+var keen = keen.configure({
+	projectId: "<project_id>";
+	readKey: scopedKey
+});
+```
+
 ## Future Updates
 
 Future module updates are planned to introduce the remaining api calls. You can see some of the spec for that in examples/queries.js. Also as mentioned above specifying options when creating an instance to configure the behaviour of the instance (ie, batching event submissions).
@@ -92,6 +110,10 @@ Keen IO - Website: https://keen.io/
 Keen IO - API Technical Reference: https://keen.io/docs/api/reference/
 
 ## Release History
+
+### 0.0.3
+
+- Support generating Scoped Keys.
 
 ### 0.0.2
 
