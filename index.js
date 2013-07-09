@@ -152,9 +152,9 @@ function encryptScopedKey(apiKey, options) {
 	var iv = crypto.randomBytes(16);
 	var cipher = crypto.createCipheriv("aes-256-cbc", apiKey, iv);
 	var jsonOptions = JSON.stringify(options);
-	var encryptOutput1 = cipher.update(jsonOptions, "utf8");
-	var encryptOutput2 = cipher.final();
-	var ivPlusEncrypted = iv.toString("hex") + encryptOutput1.toString("hex") + encryptOutput2.toString("hex");
+	var encryptOutput1 = cipher.update(jsonOptions, "utf8", "hex");
+	var encryptOutput2 = cipher.final("hex");
+	var ivPlusEncrypted = iv.toString("hex") + encryptOutput1 + encryptOutput2;
 	return ivPlusEncrypted;
 }
 
