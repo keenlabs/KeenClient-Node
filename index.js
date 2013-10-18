@@ -20,11 +20,18 @@ function KeenApi(config) {
 	var baseUrl = this.baseUrl;
 	var apiVersion = this.apiVersion;
 
+	var handleAgentError = function(message, err) {
+		console.log("ERROR: " + message + ": " + err);
+	}
+
 	var request = {
 		get: function(apiKey, path, callback) {
 			rest
 				.get(baseUrl + apiVersion + path)
 				.set('Authorization', apiKey)
+				.on('error', function(err) {
+					handleAgentError("HTTPS 'get' agent", err);
+				})
 				.end(function(res) {
 					processResponse(res, callback);
 				});
@@ -35,6 +42,9 @@ function KeenApi(config) {
 				.set('Authorization', apiKey)
 				.set('Content-Type', 'application/json')
 				.send(data || {})
+				.on('error', function(err) {
+					handleAgentError("HTTPS 'post' agent", err);
+				})
 				.end(function(res) {
 					processResponse(res, callback);
 				});
@@ -44,6 +54,9 @@ function KeenApi(config) {
 				.del(baseUrl + apiVersion + path)
 				.set('Authorization', apiKey)
 				.set('Content-Length', 0)
+				.on('error', function(err) {
+					handleAgentError("HTTPS 'delete' agent", err);
+				})
 				.end(function(res) {
 					processResponse(res, callback);
 				});
