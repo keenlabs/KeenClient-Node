@@ -25,8 +25,8 @@ function KeenApi(config) {
 			rest
 				.get(baseUrl + apiVersion + path)
 				.set('Authorization', apiKey)
-				.end(function(res) {
-					processResponse(res, callback);
+				.end(function(err, res) {
+					processResponse(err, res, callback);
 				});
 		},
 		post: function(apiKey, path, data, callback) {
@@ -35,8 +35,8 @@ function KeenApi(config) {
 				.set('Authorization', apiKey)
 				.set('Content-Type', 'application/json')
 				.send(data || {})
-				.end(function(res) {
-					processResponse(res, callback);
+				.end(function(err, res) {
+					processResponse(err, res, callback);
 				});
 		},
 		del: function(apiKey, path, callback) {
@@ -44,22 +44,25 @@ function KeenApi(config) {
 				.del(baseUrl + apiVersion + path)
 				.set('Authorization', apiKey)
 				.set('Content-Length', 0)
-				.end(function(res) {
-					processResponse(res, callback);
+				.end(function(err, res) {
+					processResponse(err, res, callback);
 				});
 		}
 	};
 
 	// Handle logic of processing response, including error messages
 	// The error handling should be strengthened over time to be more meaningful and robust
-	function processResponse(res, callback) {
+	function processResponse(err, res, callback) {
 		callback = callback || function() {};
-		if (res.ok) {
-			return callback(undefined, res.body);
+
+		if (!res.ok && !err) {
+			var is_err = res.body && res.body.error_code;
+			err = new Error(is_err ? res.body.message : 'Unknown error occurred');
+			err.code = is_err ? res.body.error_code : 'UnknownError';
 		}
 
-		var error = typeof res.body == 'object' && typeof res.body.error_code == 'string' ? res.body.error_code : 'UnknownError';
-		callback(new Error(error));
+		if (err) return callback(err);
+		return callback(null, res.body);
 	}
 
 	// Public Methods
