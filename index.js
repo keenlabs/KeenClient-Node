@@ -55,7 +55,7 @@ function KeenApi(config) {
 	function processResponse(err, res, callback) {
 		callback = callback || function() {};
 
-		if (!res.ok && !err) {
+		if (res && !res.ok && !err) {
 			var is_err = res.body && res.body.error_code;
 			err = new Error(is_err ? res.body.message : 'Unknown error occurred');
 			err.code = is_err ? res.body.error_code : 'UnknownError';
