@@ -142,6 +142,24 @@ function KeenApi(config) {
 
 		request.post(this.writeKey, "/projects/" + this.projectId + "/events", events, callback);
 	};
+
+    //query support. metric matches one of the following: count, count_unique, minimum, maximum, sum, average
+    this.queries = {
+        perform: function(eventCollection, metric, query, callback) {
+            if (!this.readKey) {
+                var errorMessage = "You must specify a non-null, non-empty 'readKey' in your 'config' object when calling keen.configure()!";
+                var error = new Error(errorMessage);
+                if (callback) {
+                    callback(error);
+                } else {
+                    throw error;
+                }
+                return;
+            }
+
+            request.get(this.readKey, "/projects/" + this.projectId + "/queries/" + this.metric + '?' + query, callback);
+        }
+    }
 }
 
 function configure(config) {
