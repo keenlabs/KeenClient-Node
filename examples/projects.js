@@ -1,7 +1,7 @@
 var keen = require('../index.js');
 
 var keen = keen.configure({
-    projectId: "<project_id>"
+    projectId: "<project_id>",
     masterKey: "<master_key>"
 });
 

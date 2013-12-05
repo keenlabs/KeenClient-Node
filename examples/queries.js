@@ -15,7 +15,17 @@ keen.queries.list(projectId, function(err, res) {
 	console.log('queries.list', err, res);
 });
 
-keen.queries.perform(projectId, collection, 'count', {}, function(err, res) {
+ var query = {
+ target_property: "<target_property>",
+ filters: [{
+    "property_name":"<property_name>",
+    "operator":"<operator>",
+    property_value: "<property_value>"
+ }],
+ group_by: ["<groupBy1>,<groupBy2>"]
+ };
+
+keen.queries.perform(projectId, collection, 'count', query, function(err, res) {
 	console.log('queries.perform', err, res);
 });
 
