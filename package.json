@@ -20,6 +20,11 @@
       "name": "Daniel Kador",
       "email": "dan@keen.io",
       "url": "http://keen.io"
+    },
+    {
+        "name": "Bogdan Cirlig",
+        "email": "bogdan@cirlig.com",
+        "url": "http://cirlig.com"
     }
   ],
   "main": "index.js",
