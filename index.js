@@ -183,6 +183,10 @@ function KeenApi(config) {
                 //flatten the filter into a stringified array
                 query.filters = JSON.stringify(query.filters);
             }
+            if (query && query.group_by){
+                //flatten the filter into a stringified array
+                query.group_by = JSON.stringify(query.group_by);
+            }
 
             request.get(this.readKey, "/projects/" + this.projectId + "/queries/" + encodeURI(metric) + '?event_collection=' + encodeURI(collection) + '&'+ qs.stringify(query), callback);
         },
