@@ -155,4 +155,17 @@ describe("keen", function() {
         }
         expected.should.eql(options);
     });
+
+    it("should handle API errors", function(done) {
+        var id = 'foo';
+        var mockResponse = {error_code: 'FooError', message: 'no foo'};
+        mockPostRequest("/3.0/projects/"+projectId+"/events/"+id, 500, mockResponse);
+
+        keen.addEvent(id, {}, function(err, res) {
+            err.should.be.an.instanceOf(Error);
+            err.should.have.property('message', mockResponse.message);
+            err.should.have.property('code', mockResponse.error_code);
+            done();
+        });
+    });
 });
