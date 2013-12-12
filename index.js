@@ -3,6 +3,8 @@ var _ = require('underscore');
 var crypto = require('crypto');
 
 function KeenApi(config) {
+	console.log('keen config');
+	console.log(config);
 	if (!config) {
 		throw new Error("The 'config' parameter must be specified and must be a JS object.");
 	}
@@ -19,12 +21,13 @@ function KeenApi(config) {
 
 	var baseUrl = this.baseUrl;
 	var apiVersion = this.apiVersion;
-
+	var self = this;
 	var request = {
-		get: function(apiKey, path, callback) {
+		get: function(apiKey, path, data, callback) {
 			rest
 				.get(baseUrl + apiVersion + path)
 				.set('Authorization', apiKey)
+				.send(data || {})
 				.end(function(err, res) {
 					processResponse(err, res, callback);
 				});
@@ -144,6 +147,13 @@ function KeenApi(config) {
 		}
 
 		request.post(this.writeKey, "/projects/" + this.projectId + "/events", events, callback);
+	};
+
+	this.queries = {
+		extraction: function(projectId, collection, params, callback){
+			var path = '/projects/' + projectId + '/queries/extraction?event_collection=' + collection;
+			request.get(self.readKey, path, params, callback);
+		}
 	};
 }
 
