@@ -3,8 +3,6 @@ var _ = require('underscore');
 var crypto = require('crypto');
 
 function KeenApi(config) {
-	console.log('keen config');
-	console.log(config);
 	if (!config) {
 		throw new Error("The 'config' parameter must be specified and must be a JS object.");
 	}
