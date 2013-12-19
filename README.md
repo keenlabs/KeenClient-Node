@@ -6,11 +6,15 @@ Keen IO is an online service to collect, analyze, and visualize your data.
 
 ## Getting Started
 
+Use npm to install!
+
+```node
 `npm install keen.io`
+```
 
 ## Examples
 
-### Initialisation
+### Initialization
 
 ```javascript
 var keen = require('keen.io');
@@ -97,17 +101,19 @@ var keen = keen.configure({
 
 ## Future Updates
 
-Future module updates are planned to introduce the remaining api calls. You can see some of the spec for that in examples/queries.js. Also as mentioned above specifying options when creating an instance to configure the behaviour of the instance (ie, batching event submissions).
+Future module updates are planned to introduce the remaining API calls. You can see some of the spec for that in [examples/queries.js](https://github.com/keenlabs/KeenClient-Node/blob/master/examples/queries.js). Also, as mentioned above, specifying options when creating an instance to configure the behaviour of the instance (ie, batching event submissions).
 
 ## Contributing
 
-Please feel free to contribute, pull requests very welcome. The aim is to build up this module to completely represent the API provided by Keen IO which quite extensive so the more contributions the better.
+This is an open source project and we love involvement from the community! Hit us up with pull requests and issues. 
+
+The aim is to build up this module to completely represent the API provided by Keen IO, which is quite extensive. The more contributions the better!
 
 ## Further Reading
 
-Keen IO - Website: https://keen.io/
+[Keen IO - Website](https://keen.io/)
 
-Keen IO - API Technical Reference: https://keen.io/docs/api/reference/
+[Keen IO - API Technical Reference](https://keen.io/docs/api/reference/)
 
 ## Release History
 
