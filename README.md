@@ -14,7 +14,7 @@ Use npm to install!
 
 ## Examples
 
-### Initialisation
+### Initialization
 
 ```javascript
 var keen = require('keen.io');
