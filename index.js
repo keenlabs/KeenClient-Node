@@ -143,7 +143,7 @@ function KeenApi(config) {
 			throw new Error('\'path\' must be a string.');
 		}
 
-		if (params) {
+		if (params && typeof params !== 'function') {
 			path += '?' + qs.stringify(params);
 		}
 
