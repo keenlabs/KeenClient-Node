@@ -216,7 +216,7 @@ describe("keen", function() {
             it('should send the request', function() {
                 mockGetRequest("/3.0/projects/"+projectId+"/queries/count?event_collection=foo", 200, mockResponse);
                 keen.request('get', 'read', '/queries/count', {event_collection:'foo'}, function(err, res) {
-                    should(err).not.be.null;
+                    (err === null).should.be.true;
                     res.should.eql(mockResponse);
                 });
             });
@@ -224,7 +224,7 @@ describe("keen", function() {
             it('has optional params', function() {
                 mockGetRequest("/3.0/projects/"+projectId+"/queries/count?event_collection=bar", 200, mockResponse);
                 keen.request('get', 'read', '/queries/count?event_collection=bar', function(err, res) {
-                    should(err).be.null;
+                    (err === null).should.be.true;
                     res.should.eql(mockResponse);
                 });
             });
