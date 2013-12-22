@@ -1,6 +1,7 @@
 var rest = require('superagent');
 var _ = require('underscore');
 var crypto = require('crypto');
+var qs = require('querystring');
 
 function KeenApi(config) {
 	if (!config) {
@@ -129,6 +130,40 @@ function KeenApi(config) {
 		}
 
 		request.post(this.writeKey, "/projects/" + this.projectId + "/events/" + eventCollection, event, callback);
+	};
+
+	this.request = function(method, keyType, path, params, callback) {
+		method = typeof method === 'string' && method.toLowerCase();
+		keyType += 'Key';
+		callback = callback || (typeof params === 'function') && params;
+
+		if (typeof path === 'string') {
+			path = '/projects/' + this.projectId + '/' + path.replace(/^\//,'');
+		} else {
+			throw new Error('\'path\' must be a string.');
+		}
+
+		if (params) {
+			path += '?' + qs.stringify(params);
+		}
+
+		if ( ! request.hasOwnProperty(method)) {
+			throw new Error('Method must be of type: GET/POST/DEL');
+		}
+
+		if (!this.hasOwnProperty(keyType)) {
+			throw new Error('Key must be of type: master/write/read');
+		}
+
+		if (!this[keyType]) {
+			throw new Error('You must specify a nun-null, non-empty \'' + keyType + '\' in your config object.');
+		}
+
+		if(method === 'post') {
+			return request.post(this[keyType], path, params, callback);
+		}
+
+		request[method](this[keyType], path, callback);
 	};
 
 	this.addEvents = function(events, callback) {
