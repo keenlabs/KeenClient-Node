@@ -203,31 +203,27 @@ describe("keen", function() {
 
         describe('send the request', function() {
             var projectId = "projectId";
-            var baseUrl = "blah";
-            var apiVersion = "foo";
-            var mockResponse = JSON.stringify({result: 1});
-            var keen;
-
-            beforeEach(function() {
-                keen = require('../').configure({
-                    projectId: projectId,
-                    baseUrl: baseUrl,
-                    apiVersion: apiVersion,
-                    readKey: 'foo'
-                });
+            var baseUrl = "https://api.keen.io/";
+            var apiVersion = "3.0";
+            var mockResponse = {result: 1};
+            var keen = require('../').configure({
+                projectId: projectId,
+                baseUrl: baseUrl,
+                apiVersion: apiVersion,
+                readKey: 'foo'
             });
 
             it('should send the request', function() {
                 mockGetRequest("/3.0/projects/"+projectId+"/queries/count?event_collection=foo", 200, mockResponse);
                 keen.request('get', 'read', '/queries/count', {event_collection:'foo'}, function(err, res) {
-                    should(err).be.null;
+                    should(err).not.be.null;
                     res.should.eql(mockResponse);
                 });
             });
 
             it('has optional params', function() {
-                mockGetRequest("/3.0/projects/"+projectId+"/queries/count?event_collection=foo", 200, mockResponse);
-                keen.request('get', 'read', '/queries/count?event_collection=foo', function(err, res) {
+                mockGetRequest("/3.0/projects/"+projectId+"/queries/count?event_collection=bar", 200, mockResponse);
+                keen.request('get', 'read', '/queries/count?event_collection=bar', function(err, res) {
                     should(err).be.null;
                     res.should.eql(mockResponse);
                 });
