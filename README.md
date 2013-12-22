@@ -119,7 +119,7 @@ The aim is to build up this module to completely represent the API provided by K
 
 ### 0.0.4
 
-- Update dependencies, drop support for 0.8.
+- Update dependencies.
 
 ### 0.0.3
 
