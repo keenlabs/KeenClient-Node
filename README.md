@@ -117,6 +117,10 @@ The aim is to build up this module to completely represent the API provided by K
 
 ## Release History
 
+### 0.0.4
+
+- Update dependencies, drop support for 0.8.
+
 ### 0.0.3
 
 - Support generating Scoped Keys.

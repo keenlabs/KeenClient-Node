@@ -1,6 +1,6 @@
 {
   "name": "keen.io",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Keen IO NodeJS module. Keen IO is a hosted API to collect, analyze, and visualize your data.",
   "homepage": "https://github.com/keenlabs/KeenClient-Node",
   "bugs": {
@@ -31,7 +31,7 @@
     "url": "git://github.com/keenlabs/KeenClient-Node.git"
   },
   "engines": {
-    "node": ">= 0.6.0"
+    "node": ">= 0.10.0"
   },
   "keywords": [
     "keen",
