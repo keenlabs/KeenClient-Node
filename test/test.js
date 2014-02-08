@@ -237,33 +237,12 @@ describe("keen", function() {
     describe('flushing', function () {
 
         // First things first:
-        // * [ ] A small refactor to handle promises/callbacks better.
+        // * [x] A small refactor to handle promises/callbacks better.
         //       We need to get the promise.
         //       It can be returned.
         //       But we shall also try to store the response logic against it.
         //       We continue to pass in callbacks as before, in order to stay compatible.
-
-        // By default the library will flush:
-        // * [ ] The very first time it gets a message.
-        // * [ ] Every N messages.
-        // * [ ] If S seconds has passed since the last flush.
-
-        // Notes:
-        // * [ ] If there are too many messages and the module cannot flush faster than it's 
-        //   receiving messages, it will stop accepting messages instead of growing the queue
-        //   until it runs out of memory... :)
-        // * [ ] Before flushing a message contains a promise.
-        // * [ ] We should be able to flush manually.
-        // * [ ] Configurable.
-
-        // Code:
-        // * [x] Check things are constructed correctly.
-        // * [x] Create small triggers.
-        // * [ ] Check to see whether the methods are returning promises?
-        // * [ ] Implement _enqueue().
-        // * [ ] Implement _checkFlush().
-        // * [ ] Implement flush().
-        // * [ ] Implement _clearTimer().
+        // * [ ] Need serious rewrite. Reuse of request object is making queueing horrendous.
 
         describe('triggers', function () {
 
@@ -327,8 +306,78 @@ describe("keen", function() {
 
         });
 
-        describe('_enqueue()', function () {
+        // By default the library will flush:
+        // * [ ] Every N messages.
+        // * [ ] If S milliseconds has passed since the last flush.
 
+        // Notes:
+        // * [ ] If there are too many messages and the module cannot flush faster than it's 
+        //   receiving messages, it will stop accepting messages instead of growing the queue
+        //   until it runs out of memory... :)
+        // * [ ] Before flushing a message contains a promise.
+        // * [ ] We should be able to flush manually.
+        // * [ ] Configurable.
+
+        // Code:
+        // * [x] Check things are constructed correctly.
+        // * [x] Create small triggers.
+        // * [ ] Implement _enqueue().
+        // * [ ] Implement _checkFlush().
+        // * [ ] Implement flush().
+        // * [ ] Implement _setTimer and _clearTimer().
+
+        // flush: { maxQueueSize, atEventQuantity, afterTime, timerInterval }
+
+        describe('_enqueue()', function () {
+            // Drop data if the queue has expanded beyond the max queue size.
+            // Log an error message.
+
+            // Push to the queue.
+
+            // Check to see whether the timer was set.
+
+            // Check whether it should be flushing.
+        });
+
+        describe('_checkFlush()', function () {
+            // @todo: To begin with just flush immediately.
+
+            // then:
+
+            // Loop through the triggers, whichs should be set against the client.
+            // *OR* with a variable `shouldFlush`, on triggering against the scope.
+
+            // Call flush if true, and false otherwise.
+
+            // Return true or false.
+        });
+
+        describe('flush()', function () {
+            // Given an empty queue, do nothing.
+
+            // If the queue length is non-zero, then...
+            // create a batch by splicing up until `this.options.flushAt`
+            // also, test that this reduces the size of the queue.
+
+            // Get a list of promises.
+
+            // Make each of the requests in the batch.
+
+            // Set `this._lastFlush` to the current date.
+
+            // If the queue length gets to zero, then clear the timer.
+        });
+
+        describe('_setTimer', function () {
+            // @todo: Do nothing for now but implement.
+
+            // If there is no timer, then create a timer with an interval.
+        });
+
+        describe('_clearTimer', function () {
+            // @todo: Do nothing for now but implement.
+
+            // Clear the timer if there is a timer.
         });
     });
 });

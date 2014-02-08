@@ -24,6 +24,7 @@ function KeenApi(config) {
 	var baseUrl = this.baseUrl;
 	var apiVersion = this.apiVersion;
 
+	var self = this;
 	var request = {
 		get: function(apiKey, path, callback) {
 			rest
@@ -34,11 +35,12 @@ function KeenApi(config) {
 				});
 		},
 		post: function(apiKey, path, data, callback) {
+			data = data || {};
 			rest
 				.post(baseUrl + apiVersion + path)
 				.set('Authorization', apiKey)
 				.set('Content-Type', 'application/json')
-				.send(data || {})
+				.send(data)
 				.end(function(err, res) {
 					processResponse(err, res, callback);
 				});
@@ -51,6 +53,24 @@ function KeenApi(config) {
 				.end(function(err, res) {
 					processResponse(err, res, callback);
 				});
+		},
+		queuePost: function(apiKey, path, data, callback) {
+			data = data || {};
+			var promise = rest
+				.post(baseUrl + apiVersion + path)
+				.set('Authorization', apiKey)
+				.set('Content-Type', 'application/json')
+				.send(data);
+
+			var requestData = {
+				data: data,
+				promise: promise,
+				callback: callback
+			};
+			
+			self._enqueue(requestData);
+
+			return promise;
 		}
 	};
 
@@ -120,21 +140,6 @@ function KeenApi(config) {
 		}
 	};
 
-	this.addEvent = function(eventCollection, event, callback) {
-		if (!this.writeKey) {
-			var errorMessage = "You must specify a non-null, non-empty 'writeKey' in your 'config' object when calling keen.configure()!";
-			var error = new Error(errorMessage);
-			if (callback) {
-				callback(error);
-			} else {
-				throw error;
-			}
-			return;
-		}
-
-		request.post(this.writeKey, "/projects/" + this.projectId + "/events/" + eventCollection, event, callback);
-	};
-
 	this.request = function(method, keyType, path, params, callback) {
 		method = typeof method === 'string' && method.toLowerCase();
 		keyType += 'Key';
@@ -169,6 +174,21 @@ function KeenApi(config) {
 		request[method](this[keyType], path, callback);
 	};
 
+	this.addEvent = function(eventCollection, event, callback) {
+		if (!this.writeKey) {
+			var errorMessage = "You must specify a non-null, non-empty 'writeKey' in your 'config' object when calling keen.configure()!";
+			var error = new Error(errorMessage);
+			if (callback) {
+				callback(error);
+			} else {
+				throw error;
+			}
+			return;
+		}
+
+		request.queuePost(this.writeKey, "/projects/" + this.projectId + "/events/" + eventCollection, event, callback);
+	};
+
 	this.addEvents = function(events, callback) {
 		if (!this.writeKey) {
 			var errorMessage = "You must specify a non-null, non-empty 'writeKey' in your 'config' object when calling keen.configure()!";
@@ -181,7 +201,18 @@ function KeenApi(config) {
 			return;
 		}
 
-		request.post(this.writeKey, "/projects/" + this.projectId + "/events", events, callback);
+		request.queuePost(this.writeKey, "/projects/" + this.projectId + "/events", events, callback);
+	};
+
+	/**
+	 * Enqueues a message onto `this._queue`.
+	 * @param {Object} requestData Data to send to Keen.IO.
+	 */
+	this._enqueue = function (requestData) {
+		var promise = requestData.promise;
+		promise.end(function(err, res) {
+			processResponse(err, res, requestData.callback);
+		});
 	};
 }
 
