@@ -236,6 +236,13 @@ describe("keen", function() {
 
     describe('flushing', function () {
 
+        // First things first:
+        // * [ ] A small refactor to handle promises/callbacks better.
+        //       We need to get the promise.
+        //       It can be returned.
+        //       But we shall also try to store the response logic against it.
+        //       We continue to pass in callbacks as before, in order to stay compatible.
+
         // By default the library will flush:
         // * [ ] The very first time it gets a message.
         // * [ ] Every N messages.
@@ -251,7 +258,7 @@ describe("keen", function() {
 
         // Code:
         // * [x] Check things are constructed correctly.
-        // * [ ] Create small triggers.
+        // * [x] Create small triggers.
         // * [ ] Check to see whether the methods are returning promises?
         // * [ ] Implement _enqueue().
         // * [ ] Implement _checkFlush().
