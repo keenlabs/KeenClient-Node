@@ -230,4 +230,33 @@ describe("keen", function() {
             });
         });
     });
+
+    describe('flushing', function () {
+
+        // By default the library will flush:
+        // * The very first time it gets a message.
+        // * Every N messages.
+        // * If S seconds has passed since the last flush.
+
+        // Notes:
+        // * If there are too many messages and the module cannot flush faster than it's 
+        //   receiving messages, it will stop accepting messages instead of growing the queue
+        //   until it runs out of memory... :)
+        // * Before flushing a message contains a promise.
+        // * We should be able to flush manually.
+        // * Configurable.
+
+        // Code:
+        // * Create small triggers.
+        // * Check things are constructed correctly.
+        // * Check to see whether the methods are returning promises?
+        // * Implement _enqueue().
+        // * Implement _checkFlush().
+        // * Implement flush().
+        // * Implement _clearTimer().
+
+        describe('enqueue()', function () {
+
+        });
+    });
 });
