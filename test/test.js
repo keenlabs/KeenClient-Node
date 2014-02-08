@@ -37,6 +37,9 @@ describe("keen", function() {
         keen.masterKey.should.equal(masterKey);
         keen.baseUrl.should.equal("https://api.keen.io/");
         keen.apiVersion.should.equal("3.0");
+
+        keen._queue.should.eql([]);
+        keen._lastFlush.should.be.instanceOf(Date);
     });
 
     it("configure should allow overriding baseUrl and apiVersion", function() {
@@ -234,28 +237,90 @@ describe("keen", function() {
     describe('flushing', function () {
 
         // By default the library will flush:
-        // * The very first time it gets a message.
-        // * Every N messages.
-        // * If S seconds has passed since the last flush.
+        // * [ ] The very first time it gets a message.
+        // * [ ] Every N messages.
+        // * [ ] If S seconds has passed since the last flush.
 
         // Notes:
-        // * If there are too many messages and the module cannot flush faster than it's 
+        // * [ ] If there are too many messages and the module cannot flush faster than it's 
         //   receiving messages, it will stop accepting messages instead of growing the queue
         //   until it runs out of memory... :)
-        // * Before flushing a message contains a promise.
-        // * We should be able to flush manually.
-        // * Configurable.
+        // * [ ] Before flushing a message contains a promise.
+        // * [ ] We should be able to flush manually.
+        // * [ ] Configurable.
 
         // Code:
-        // * Create small triggers.
-        // * Check things are constructed correctly.
-        // * Check to see whether the methods are returning promises?
-        // * Implement _enqueue().
-        // * Implement _checkFlush().
-        // * Implement flush().
-        // * Implement _clearTimer().
+        // * [x] Check things are constructed correctly.
+        // * [ ] Create small triggers.
+        // * [ ] Check to see whether the methods are returning promises?
+        // * [ ] Implement _enqueue().
+        // * [ ] Implement _checkFlush().
+        // * [ ] Implement flush().
+        // * [ ] Implement _clearTimer().
 
-        describe('enqueue()', function () {
+        describe('triggers', function () {
+
+            var triggers = require('../lib/triggers');
+
+            describe('#isQueueBeyondLimit()', function () {
+
+                it('should be able to return true', function () {
+                    var clientScope = {
+                        _queue: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+                        options: {
+                            flushAt: 10
+                        }
+                    };
+
+                    triggers.isQueueBeyondLimit.apply(clientScope).should.be.true;
+                });
+
+                it('should be able to return false', function () {
+                    var clientScope = {
+                        _queue: [1, 2, 3],
+                        options: {
+                            flushAt: 10
+                        }
+                    };
+
+                    triggers.isQueueBeyondLimit.apply(clientScope).should.be.false;
+                });
+
+            });
+
+            describe('#hasTimePassedSinceLastFlush()', function () {
+                
+                it('should be able to return true', function () {
+                    var lastFlushTime = new Date();
+                    lastFlushTime = lastFlushTime.setDate(lastFlushTime.getDate() - 7);
+
+                    var clientScope = {
+                        _lastFlush: lastFlushTime,
+                        options: {
+                            flushAfter: 10000
+                        }
+                    };
+
+                    triggers.hasTimePassedSinceLastFlush.apply(clientScope).should.be.true;
+                });
+
+                it('should be able to return false', function () {
+                    var lastFlushTime = new Date();
+                    var clientScope = {
+                        _lastFlush: lastFlushTime,
+                        options: {
+                            flushAfter: 10000
+                        }
+                    };
+
+                    triggers.hasTimePassedSinceLastFlush.apply(clientScope).should.be.false;
+                });
+
+            });
+
+        });
+
+        describe('_enqueue()', function () {
 
         });
     });

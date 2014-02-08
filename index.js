@@ -18,6 +18,9 @@ function KeenApi(config) {
 	this.baseUrl = config.baseUrl || 'https://api.keen.io/';
 	this.apiVersion = config.apiVersion || '3.0';
 
+	this._queue = [];
+	this._lastFlush = new Date(0);
+
 	var baseUrl = this.baseUrl;
 	var apiVersion = this.apiVersion;
 
