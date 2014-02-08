@@ -38,6 +38,13 @@ describe("keen", function() {
         keen.baseUrl.should.equal("https://api.keen.io/");
         keen.apiVersion.should.equal("3.0");
 
+        keen._flushOptions.should.eql({
+            atEventQuantity: 20,
+            afterTime: 10000, 
+            maxQueueSize: 10000,
+            timerInterval: 10000
+        });
+
         keen._queue.should.eql([]);
         keen._lastFlush.should.be.instanceOf(Date);
     });
@@ -253,8 +260,8 @@ describe("keen", function() {
                 it('should be able to return true', function () {
                     var clientScope = {
                         _queue: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-                        options: {
-                            flushAt: 10
+                        _flushOptions: {
+                            atEventQuantity: 10
                         }
                     };
 
@@ -264,8 +271,8 @@ describe("keen", function() {
                 it('should be able to return false', function () {
                     var clientScope = {
                         _queue: [1, 2, 3],
-                        options: {
-                            flushAt: 10
+                        _flushOptions: {
+                            atEventQuantity: 10
                         }
                     };
 
@@ -282,8 +289,8 @@ describe("keen", function() {
 
                     var clientScope = {
                         _lastFlush: lastFlushTime,
-                        options: {
-                            flushAfter: 10000
+                        _flushOptions: {
+                            afterTime: 10000
                         }
                     };
 
@@ -294,8 +301,8 @@ describe("keen", function() {
                     var lastFlushTime = new Date();
                     var clientScope = {
                         _lastFlush: lastFlushTime,
-                        options: {
-                            flushAfter: 10000
+                        _flushOptions: {
+                            afterTime: 10000
                         }
                     };
 
@@ -311,12 +318,12 @@ describe("keen", function() {
         // * [ ] If S milliseconds has passed since the last flush.
 
         // Notes:
+        // * [x] Before flushing a message contains a promise.
+        // * [x] Configurable.
         // * [ ] If there are too many messages and the module cannot flush faster than it's 
         //   receiving messages, it will stop accepting messages instead of growing the queue
         //   until it runs out of memory... :)
-        // * [ ] Before flushing a message contains a promise.
         // * [ ] We should be able to flush manually.
-        // * [ ] Configurable.
 
         // Code:
         // * [x] Check things are constructed correctly.
@@ -325,8 +332,6 @@ describe("keen", function() {
         // * [ ] Implement _checkFlush().
         // * [ ] Implement flush().
         // * [ ] Implement _setTimer and _clearTimer().
-
-        // flush: { maxQueueSize, atEventQuantity, afterTime, timerInterval }
 
         describe('_enqueue()', function () {
             // Drop data if the queue has expanded beyond the max queue size.

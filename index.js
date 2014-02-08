@@ -18,6 +18,13 @@ function KeenApi(config) {
 	this.baseUrl = config.baseUrl || 'https://api.keen.io/';
 	this.apiVersion = config.apiVersion || '3.0';
 
+	this._flushOptions = _.extend({
+		atEventQuantity: 20,
+		afterTime: 10000, 
+		maxQueueSize: 10000,
+		timerInterval: 10000
+	}, config.flush || {})
+
 	this._queue = [];
 	this._lastFlush = new Date(0);
 
