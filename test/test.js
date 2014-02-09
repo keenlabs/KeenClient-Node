@@ -243,6 +243,8 @@ describe("keen", function() {
 
     describe('flushing', function () {
 
+        var sinon = require('sinon');
+
         // First things first:
         // * [x] A small refactor to handle promises/callbacks better.
         //       We need to get the promise.
@@ -337,43 +339,65 @@ describe("keen", function() {
         // * [x] Implement _setTimer and _clearTimer().
 
         describe('_enqueue()', function () {
-            // Drop data if the queue has expanded beyond the max queue size.
-            // Log an error message.
 
-            // Push to the queue.
+            it('should drop data if the queue has expanded beyond the max queue size', function () {
 
-            // Check to see whether the timer was set.
+            });
 
-            // Check whether it should be flushing.
+            it('should push to the queue on normal operation', function () {
+
+            });
+
+            it('should set the timer, if it has not been set already', function () {
+
+            });
+
+            it('should call flush if _checkFlush() returns true', function () {
+
+            });
         });
 
         describe('_checkFlush()', function () {
-            // @todo: To begin with just flush immediately.
 
-            // then:
+            it("should return true if too much time passed since last flush", function () {
 
-            // Loop through the triggers, whichs should be set against the client.
-            // *OR* with a variable `shouldFlush`, on triggering against the scope.
+            });
 
-            // Call flush if true, and false otherwise.
+            it("should return true if the length of the queue is too large", function () {
 
-            // Return true or false.
+            });
+
+            it("should return false if neither of the triggers returned true", function () {
+
+            });
+
         });
 
         describe('flush()', function () {
-            // Given an empty queue, do nothing.
 
-            // If the queue length is non-zero, then...
-            // create a batch by splicing up until `this.options.flushAt`
-            // also, test that this reduces the size of the queue.
+            it('should do nothing when the queue is empty', function () {
 
-            // Get a list of promises.
+            });
 
-            // Make each of the requests in the batch.
+            it('should reduce the size of the queue by atEventQuantity', function () {
+                // If the queue length is non-zero, then...
+                // create a batch by splicing up until `this.options.flushAt`
+                // also, test that this reduces the size of the queue.
+            });
 
-            // Set `this._lastFlush` to the current date.
+            it('should fulfill the queues promises', function () {
+                // Get a list of promises.
+                // Make each of the requests in the batch.
+            })
 
-            // If the queue length gets to zero, then clear the timer.
+            it('should set _lastFlush with the current date', function () {
+                // Set `this._lastFlush` to the current date.
+            });
+
+            it('should call _clearTimer if the queue hits zero', function () {
+                // If the queue length gets to zero, then clear the timer.
+            });
+
         });
 
         describe('_setTimer', function () {

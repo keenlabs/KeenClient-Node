@@ -3,6 +3,8 @@ var _ = require('underscore');
 var crypto = require('crypto');
 var qs = require('querystring');
 
+var triggers = require('./lib/triggers');
+
 function KeenApi(config) {
 	if (!config) {
 		throw new Error("The 'config' parameter must be specified and must be a JS object.");
@@ -25,6 +27,7 @@ function KeenApi(config) {
 		timerInterval: 10000
 	}, config.flush || {})
 
+	this._triggers = triggers;
 	this._queue = [];
 	this._lastFlush = new Date(0);
 
@@ -220,6 +223,27 @@ function KeenApi(config) {
 		promise.end(function(err, res) {
 			processResponse(err, res, requestData.callback);
 		});
+	};
+
+	/**
+	 *
+	 */
+	this._checkFlush = function () {
+		var self = this,
+			shouldFlush;
+
+		shouldFlush = _.reduce(this._triggers, function (shouldFlush, unboundTrigger) {
+			shouldFlush = shouldFlush || unboundTrigger.apply(self);
+		}, false);
+
+		return shouldFlush;
+	};
+
+	/**
+	 *
+	 */
+	this.flush = function () {
+
 	};
 
 	/**
