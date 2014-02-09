@@ -3,6 +3,8 @@ var _ = require('underscore');
 var crypto = require('crypto');
 var qs = require('querystring');
 
+var triggers = require('./lib/triggers');
+
 function KeenApi(config) {
 	if (!config) {
 		throw new Error("The 'config' parameter must be specified and must be a JS object.");
@@ -18,9 +20,21 @@ function KeenApi(config) {
 	this.baseUrl = config.baseUrl || 'https://api.keen.io/';
 	this.apiVersion = config.apiVersion || '3.0';
 
+	this._flushOptions = _.extend({
+		atEventQuantity: 20,
+		afterTime: 10000, 
+		maxQueueSize: 10000,
+		timerInterval: 10000
+	}, config.flush || {})
+
+	this._triggers = triggers;
+	this._queue = [];
+	this._lastFlush = new Date(0);
+
 	var baseUrl = this.baseUrl;
 	var apiVersion = this.apiVersion;
 
+	var self = this;
 	var request = {
 		get: function(apiKey, path, callback) {
 			rest
@@ -31,11 +45,12 @@ function KeenApi(config) {
 				});
 		},
 		post: function(apiKey, path, data, callback) {
+			data = data || {};
 			rest
 				.post(baseUrl + apiVersion + path)
 				.set('Authorization', apiKey)
 				.set('Content-Type', 'application/json')
-				.send(data || {})
+				.send(data)
 				.end(function(err, res) {
 					processResponse(err, res, callback);
 				});
@@ -48,6 +63,24 @@ function KeenApi(config) {
 				.end(function(err, res) {
 					processResponse(err, res, callback);
 				});
+		},
+		queuePost: function(apiKey, path, data, callback) {
+			data = data || {};
+			var promise = rest
+				.post(baseUrl + apiVersion + path)
+				.set('Authorization', apiKey)
+				.set('Content-Type', 'application/json')
+				.send(data);
+
+			var requestData = {
+				data: data,
+				promise: promise,
+				callback: callback
+			};
+			
+			self._enqueue(requestData);
+
+			return promise;
 		}
 	};
 
@@ -95,7 +128,7 @@ function KeenApi(config) {
 				}
 				data[collection].push(item);
 			});
-			request.post(this.writeKey, '/projects/' + projectId + '/events', data, callback);
+			request.queuePost(this.writeKey, '/projects/' + projectId + '/events', data, callback);
 		}
 	};
 
@@ -115,21 +148,6 @@ function KeenApi(config) {
 		remove: function(projectId, collection, callback) {
 			request.del(this.masterKey, '/projects/' + projectId + '/events/' + collection, callback);
 		}
-	};
-
-	this.addEvent = function(eventCollection, event, callback) {
-		if (!this.writeKey) {
-			var errorMessage = "You must specify a non-null, non-empty 'writeKey' in your 'config' object when calling keen.configure()!";
-			var error = new Error(errorMessage);
-			if (callback) {
-				callback(error);
-			} else {
-				throw error;
-			}
-			return;
-		}
-
-		request.post(this.writeKey, "/projects/" + this.projectId + "/events/" + eventCollection, event, callback);
 	};
 
 	this.request = function(method, keyType, path, params, callback) {
@@ -166,6 +184,21 @@ function KeenApi(config) {
 		request[method](this[keyType], path, callback);
 	};
 
+	this.addEvent = function(eventCollection, event, callback) {
+		if (!this.writeKey) {
+			var errorMessage = "You must specify a non-null, non-empty 'writeKey' in your 'config' object when calling keen.configure()!";
+			var error = new Error(errorMessage);
+			if (callback) {
+				callback(error);
+			} else {
+				throw error;
+			}
+			return;
+		}
+
+		request.queuePost(this.writeKey, "/projects/" + this.projectId + "/events/" + eventCollection, event, callback);
+	};
+
 	this.addEvents = function(events, callback) {
 		if (!this.writeKey) {
 			var errorMessage = "You must specify a non-null, non-empty 'writeKey' in your 'config' object when calling keen.configure()!";
@@ -178,7 +211,102 @@ function KeenApi(config) {
 			return;
 		}
 
-		request.post(this.writeKey, "/projects/" + this.projectId + "/events", events, callback);
+		request.queuePost(this.writeKey, "/projects/" + this.projectId + "/events", events, callback);
+	};
+
+	/**
+	 * Enqueues a message onto `this._queue`.
+	 * Checks whether it is time to flush, and then flushes if necessary.
+	 * @param {Object} requestData Event data to send to Keen.IO.
+	 */
+	this._enqueue = function (requestData) {
+		var enqueued = false;
+		if (this._queue.length >= this._flushOptions.maxQueueSize) {
+			console.error('KeenClient-Node failed to enqueue the event because the queue is full. ' +
+				          'Consider increasing the queue size.')
+		} else {
+			this._queue.push(requestData);
+			this._setTimer();
+			enqueued = true;
+
+			if (this._shouldFlush()) {
+				this.flush();
+			}
+		}
+
+		return enqueued;
+	};
+
+	/**
+	 * Checks whether it is time to flush.
+	 */
+	this._shouldFlush = function () {
+		var self = this,
+			shouldFlush;
+
+		shouldFlush = _.reduce(this._triggers, function (shouldFlush, unboundTrigger) {
+			return shouldFlush || unboundTrigger.apply(self);
+		}, false);
+
+		return shouldFlush;
+	};
+
+	/**
+	 * Flush the queue. Reduces the queue length by `this._flushOptions.atEventQuantity`.
+	 * The queue is only filled up by using request.postQueue() which is currently used by only addEvent() and addEvents().
+	 */
+	this.flush = function () {
+		if (this._queue.length === 0) {
+			return false;
+		}
+
+		// If the queue length is non-zero, then:
+		// create a group by splicing up until `this._flushOptions.atEventQuantity`
+		var queueGroup = this._queue.splice(0, this._flushOptions.atEventQuantity);
+
+		// Do each of the requests in the queue group.
+		_.each(queueGroup, function (e) {
+			var promise = e.promise;
+			promise.end(function(err, res) {
+				processResponse(err, res, e.callback);
+			});
+		});
+
+		this._lastFlush = new Date();
+
+		if (this._queue.length === 0) {
+			this._clearTimer();
+		}
+
+		return true;
+	};
+
+	/**
+	 * Starts and sets a timer at `this._timer`.
+	 * Timer checks whether it should be flushing - generally:
+	 * N milliseconds has passed since the last flush or the queue contains events. 
+	 * It flushes if this is the case.
+	 */
+	this._setTimer = function () {
+		var self = this;
+		if (!this._timer) {
+			this._timer = setInterval(function () {
+				if (self._shouldFlush.apply(self)) {
+					self.flush.apply(self);
+				}
+			}, this._flushOptions.timerInterval);
+		}
+	};
+
+	/**
+	 * Stops and clears the timer at `this._timer`. Afterwards: no longer checking 
+	 * to see whether the queue should be flushed.
+	 */
+	this._clearTimer = function () {
+		if (this._timer) {
+			clearInterval(this._timer);
+			this._timer = null;
+		}
 	};
 }
 

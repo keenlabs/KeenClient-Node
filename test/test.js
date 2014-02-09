@@ -37,6 +37,16 @@ describe("keen", function() {
         keen.masterKey.should.equal(masterKey);
         keen.baseUrl.should.equal("https://api.keen.io/");
         keen.apiVersion.should.equal("3.0");
+
+        keen._flushOptions.should.eql({
+            atEventQuantity: 20,
+            afterTime: 10000, 
+            maxQueueSize: 10000,
+            timerInterval: 10000
+        });
+
+        keen._queue.should.eql([]);
+        keen._lastFlush.should.be.instanceOf(Date);
     });
 
     it("configure should allow overriding baseUrl and apiVersion", function() {
@@ -229,5 +239,256 @@ describe("keen", function() {
                 });
             });
         });
+    });
+
+    describe('flushing', function () {
+
+        var sinon = require('sinon');
+
+        // First things first:
+        // * [x] A small refactor to handle promises/callbacks better.
+        //       We need to get the promise.
+        //       It can be returned.
+        //       But we shall also try to store the response logic against it.
+        //       We continue to pass in callbacks as before in order to stay compatible.
+        // * [ ] Need serious rewrite. Tonnes of abstraction leakage with request.get, request.post and ...request.queuePost.
+
+        describe('triggers', function () {
+
+            var triggers = require('../lib/triggers');
+
+            describe('#isQueueBeyondLimit()', function () {
+
+                it('should be able to return true', function () {
+                    var clientScope = {
+                        _queue: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+                        _flushOptions: {
+                            atEventQuantity: 10
+                        }
+                    };
+
+                    triggers.isQueueBeyondLimit.apply(clientScope).should.be.true;
+                });
+
+                it('should be able to return false', function () {
+                    var clientScope = {
+                        _queue: [1, 2, 3],
+                        _flushOptions: {
+                            atEventQuantity: 10
+                        }
+                    };
+
+                    triggers.isQueueBeyondLimit.apply(clientScope).should.be.false;
+                });
+
+            });
+
+            describe('#hasTimePassedSinceLastFlush()', function () {
+                
+                it('should be able to return true', function () {
+                    var lastFlushTime = new Date();
+                    lastFlushTime = lastFlushTime.setDate(lastFlushTime.getDate() - 7);
+
+                    var clientScope = {
+                        _lastFlush: lastFlushTime,
+                        _flushOptions: {
+                            afterTime: 10000
+                        }
+                    };
+
+                    triggers.hasTimePassedSinceLastFlush.apply(clientScope).should.be.true;
+                });
+
+                it('should be able to return false', function () {
+                    var lastFlushTime = new Date();
+                    var clientScope = {
+                        _lastFlush: lastFlushTime,
+                        _flushOptions: {
+                            afterTime: 10000
+                        }
+                    };
+
+                    triggers.hasTimePassedSinceLastFlush.apply(clientScope).should.be.false;
+                });
+
+            });
+
+        });
+
+        describe('_enqueue()', function () {
+            beforeEach(function (){
+                keen = require("../");
+                keen = keen.configure({
+                    projectId: projectId,
+                    writeKey: writeKey
+                });
+            });
+
+            it('should drop data if the queue has expanded beyond the max queue size', function () {
+                keen._flushOptions.maxQueueSize = 0;
+                keen._queue = [1, 2, 3, 4, 5];
+                keen._enqueue({ promise: null, callback: null }).should.be.false;
+            });
+
+            it('should push to the queue on normal operation', function () {
+                keen.flush = function () { /* do nothing to the queue...! */ }
+
+                keen._queue.length.should.be.equal(0);
+                keen._enqueue({ promise: {
+                    end: function () {}
+                }, callback: function () {} }).should.be.true;
+                keen._queue.length.should.be.equal(1);
+            });
+
+            it('should set the timer, if it has not been set already', function () {
+                var setTimerSpy = sinon.spy();
+                keen._setTimer = setTimerSpy;
+
+                keen._enqueue({ promise: {
+                    end: function () {}
+                }, callback: function () {} }).should.be.true;
+                setTimerSpy.called.should.be.true;
+            });
+
+            it('should call flush if _shouldFlush() returns true', function () {
+                var flushSpy = sinon.spy();
+                keen.flush = flushSpy;                
+                keen._shouldFlush = function () { return true; };
+                
+                keen._enqueue({ promise: {
+                    end: function () {}
+                }, callback: function () {} }).should.be.true;
+                flushSpy.called.should.be.true;
+            });
+        });
+
+        describe('_shouldFlush()', function () {
+
+            it("should return false if neither of the triggers returned true", function () {
+                keen._flushOptions.atEventQuantity = 10000;             
+                keen._flushOptions.afterTime = 1000000;
+                keen._queue = [];   
+                keen._lastFlush = new Date();
+
+                keen._shouldFlush().should.be.false;
+            });
+
+            it("should return true if too much time passed since last flush", function () {
+                keen._flushOptions.atEventQuantity = 10000;             
+                keen._flushOptions.afterTime = 10000;
+                keen._queue = [];  
+
+                var timeHasPassedSinceThis = new Date();
+                timeHasPassedSinceThis = timeHasPassedSinceThis.setDate(timeHasPassedSinceThis.getDate() - 7);
+                keen._lastFlush = timeHasPassedSinceThis;
+                
+                keen._shouldFlush().should.be.true;
+            });
+
+            it("should return true if the length of the queue is too large", function () {            
+                keen._flushOptions.afterTime = 1000000;
+                keen._lastFlush = new Date();
+
+                keen._flushOptions.atEventQuantity = 5;
+                keen._queue = [1, 2, 3, 4, 5, 6];
+
+                keen._shouldFlush().should.be.true;
+            });
+
+        });
+
+        describe('flush()', function () {
+
+            beforeEach(function (){
+                keen = require("../");
+                keen = keen.configure({
+                    projectId: projectId,
+                    writeKey: writeKey
+                });
+            });
+
+            it('should do nothing when the queue is empty', function () {
+                keen.flush().should.be.false;
+            });
+
+            it('should reduce the size of the queue by atEventQuantity', function () {
+                keen._flushOptions.atEventQuantity = 3;
+                keen._queue = [
+                    { promise: { end: function () {} }, callback: function () {} },
+                    { promise: { end: function () {} }, callback: function () {} },
+                    { promise: { end: function () {} }, callback: function () {} },
+                    { promise: { end: function () {} }, callback: function () {} },
+                    { promise: { end: function () {} }, callback: function () {} },
+                    { promise: { end: function () {} }, callback: function () {} },
+                    { promise: { end: function () {} }, callback: function () {} }
+                ];
+                keen.flush().should.be.true;
+                keen._queue.length.should.be.equal(4);
+            });
+
+            it('should fulfill the queues promises', function (done) {
+                keen._flushOptions.atEventQuantity = 1;
+
+                var eventCollection = "testCollection";
+                mockPostRequest("/3.0/projects/" + projectId + "/events/" + eventCollection, 201, {success: true});
+                keen.addEvent(eventCollection, {"a": "b"}, function (error, responseBody) {
+                    should.not.exist(error);
+                    JSON.stringify(responseBody).should.equal(JSON.stringify({ success: true }));
+                    done();
+                });
+            });
+
+            it('should change _lastFlush', function () {
+                var previousFlush = keen._lastFlush;
+
+                keen._queue = [
+                    { promise: { end: function () {} }, callback: function () {} },
+                    { promise: { end: function () {} }, callback: function () {} },
+                    { promise: { end: function () {} }, callback: function () {} }
+                ];
+                keen.flush().should.be.true;
+
+                keen._lastFlush.should.not.be.eql(previousFlush);
+            });
+
+            it('should call _clearTimer if the queue hits zero', function () {
+                var clearTimerSpy = sinon.spy();
+                keen._clearTimer = clearTimerSpy;
+
+                keen._flushOptions.atEventQuantity = 10;
+                keen._queue = [
+                    { promise: { end: function () {} }, callback: function () {} },
+                    { promise: { end: function () {} }, callback: function () {} },
+                    { promise: { end: function () {} }, callback: function () {} }
+                ];
+                keen.flush().should.be.true;
+                keen._queue.length.should.be.equal(0);
+                clearTimerSpy.called.should.be.true;
+            });
+
+        });
+
+        describe('_setTimer', function () {
+
+            it("should set a timer", function () {
+                // If there is no timer, then create a timer.
+                keen._setTimer();
+                should.exist(keen._timer);
+            });
+
+        });
+
+        describe('_clearTimer', function () {
+
+            it("should clear a timer", function () {
+                // Clear the timer if there is a timer.
+                keen._setTimer();
+                should.exist(keen._timer);
+
+                keen._clearTimer();
+                should.not.exist(keen._timer);
+            });
+
+        });        
     });
 });
