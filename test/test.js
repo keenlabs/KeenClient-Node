@@ -248,8 +248,8 @@ describe("keen", function() {
         //       We need to get the promise.
         //       It can be returned.
         //       But we shall also try to store the response logic against it.
-        //       We continue to pass in callbacks as before, in order to stay compatible.
-        // * [ ] Need serious rewrite. Reuse of request object is making queueing horrendous.
+        //       We continue to pass in callbacks as before in order to stay compatible.
+        // * [ ] Need serious rewrite. Tonnes of abstraction leakage with request.get, request.post and ...request.queuePost.
 
         describe('triggers', function () {
 
@@ -313,6 +313,9 @@ describe("keen", function() {
 
         });
 
+        // @todo: I need to test this in the literal sense, with proper examples
+        //        and logging to see when and how flushing is executed.
+
         // By default the library will flush:
         // * [ ] Every N messages.
         // * [ ] If S milliseconds has passed since the last flush.
@@ -331,7 +334,7 @@ describe("keen", function() {
         // * [ ] Implement _enqueue().
         // * [ ] Implement _checkFlush().
         // * [ ] Implement flush().
-        // * [ ] Implement _setTimer and _clearTimer().
+        // * [x] Implement _setTimer and _clearTimer().
 
         describe('_enqueue()', function () {
             // Drop data if the queue has expanded beyond the max queue size.
@@ -374,15 +377,24 @@ describe("keen", function() {
         });
 
         describe('_setTimer', function () {
-            // @todo: Do nothing for now but implement.
 
-            // If there is no timer, then create a timer with an interval.
+            it("should set a timer", function () {
+                // If there is no timer, then create a timer.
+                keen._setTimer();
+                should.exist(keen._timer);
+            });
         });
 
         describe('_clearTimer', function () {
-            // @todo: Do nothing for now but implement.
 
-            // Clear the timer if there is a timer.
+            it("should clear a timer", function () {
+                // Clear the timer if there is a timer.
+                keen._setTimer();
+                should.exist(keen._timer);
+
+                keen._clearTimer();
+                should.not.exist(keen._timer);
+            });
         });
     });
 });

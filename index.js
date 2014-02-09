@@ -213,13 +213,38 @@ function KeenApi(config) {
 
 	/**
 	 * Enqueues a message onto `this._queue`.
-	 * @param {Object} requestData Data to send to Keen.IO.
+	 * @param {Object} requestData Event data to send to Keen.IO.
 	 */
 	this._enqueue = function (requestData) {
 		var promise = requestData.promise;
 		promise.end(function(err, res) {
 			processResponse(err, res, requestData.callback);
 		});
+	};
+
+	/**
+	 * Starts and sets a timer at `this._timer`. Timer checks whether it should 
+	 * be flushing - generally: too long has passed since last flush and the queue
+	 * contains events.
+	 */
+	this._setTimer = function () {
+		var self = this;
+		if (!this._timer) {
+			this._timer = setInterval(function () {
+				self._checkFlush.apply(self);
+			}, this._flushOptions.timerInterval);
+		}
+	};
+
+	/**
+	 * Stops and clears the timer at `this._timer`. Afterwards: no longer checking 
+	 * to see whether the queue should be flushed.
+	 */
+	this._clearTimer = function () {
+		if (this._timer) {
+			clearInterval(this._timer);
+			this._timer = null;
+		}
 	};
 }
 
