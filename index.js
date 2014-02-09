@@ -260,17 +260,17 @@ function KeenApi(config) {
 			return false;
 		}
 
-        // If the queue length is non-zero, then:
-        // create a group by splicing up until `this._flushOptions.atEventQuantity`
-        var queueGroup = this._queue.splice(0, this._flushOptions.atEventQuantity);
+		// If the queue length is non-zero, then:
+		// create a group by splicing up until `this._flushOptions.atEventQuantity`
+		var queueGroup = this._queue.splice(0, this._flushOptions.atEventQuantity);
 
-	    // Do each of the requests in the queue group.
-	    _.each(queueGroup, function (e) {
+		// Do each of the requests in the queue group.
+		_.each(queueGroup, function (e) {
 			var promise = e.promise;
 			promise.end(function(err, res) {
 				processResponse(err, res, e.callback);
 			});
-	    });
+		});
 
 		this._lastFlush = new Date();
 
