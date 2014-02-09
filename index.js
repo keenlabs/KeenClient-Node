@@ -233,7 +233,7 @@ function KeenApi(config) {
 			shouldFlush;
 
 		shouldFlush = _.reduce(this._triggers, function (shouldFlush, unboundTrigger) {
-			shouldFlush = shouldFlush || unboundTrigger.apply(self);
+			return shouldFlush || unboundTrigger.apply(self);
 		}, false);
 
 		return shouldFlush;

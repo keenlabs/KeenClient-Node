@@ -319,8 +319,8 @@ describe("keen", function() {
         //        and logging to see when and how flushing is executed.
 
         // By default the library will flush:
-        // * [ ] Every N messages.
-        // * [ ] If S milliseconds has passed since the last flush.
+        // * [x] Every N messages.
+        // * [x] If S milliseconds has passed since the last flush.
 
         // Notes:
         // * [x] Before flushing a message contains a promise.
@@ -334,67 +334,86 @@ describe("keen", function() {
         // * [x] Check things are constructed correctly.
         // * [x] Create small triggers.
         // * [ ] Implement _enqueue().
-        // * [ ] Implement _checkFlush().
+        // * [x] Implement _checkFlush().
         // * [ ] Implement flush().
         // * [x] Implement _setTimer and _clearTimer().
 
         describe('_enqueue()', function () {
 
-            it('should drop data if the queue has expanded beyond the max queue size', function () {
+            xit('should drop data if the queue has expanded beyond the max queue size', function () {
 
             });
 
-            it('should push to the queue on normal operation', function () {
+            xit('should push to the queue on normal operation', function () {
 
             });
 
-            it('should set the timer, if it has not been set already', function () {
+            xit('should set the timer, if it has not been set already', function () {
 
             });
 
-            it('should call flush if _checkFlush() returns true', function () {
+            xit('should call flush if _checkFlush() returns true', function () {
 
             });
         });
 
         describe('_checkFlush()', function () {
 
-            it("should return true if too much time passed since last flush", function () {
-
-            });
-
-            it("should return true if the length of the queue is too large", function () {
-
-            });
-
             it("should return false if neither of the triggers returned true", function () {
+                keen._flushOptions.atEventQuantity = 10000;             
+                keen._flushOptions.afterTime = 1000000;
+                keen._queue = [];   
+                keen._lastFlush = new Date();
 
+                keen._checkFlush().should.be.false;
+            });
+
+            it("should return true if too much time passed since last flush", function () {
+                keen._flushOptions.atEventQuantity = 10000;             
+                keen._flushOptions.afterTime = 10000;
+                keen._queue = [];  
+
+                var timeHasPassedSinceThis = new Date();
+                timeHasPassedSinceThis = timeHasPassedSinceThis.setDate(timeHasPassedSinceThis.getDate() - 7);
+                keen._lastFlush = timeHasPassedSinceThis;
+                
+                keen._checkFlush().should.be.true;
+            });
+
+            it("should return true if the length of the queue is too large", function () {            
+                keen._flushOptions.afterTime = 1000000;
+                keen._lastFlush = new Date();
+
+                keen._flushOptions.atEventQuantity = 5;
+                keen._queue = [1, 2, 3, 4, 5, 6];
+
+                keen._checkFlush().should.be.true;
             });
 
         });
 
         describe('flush()', function () {
 
-            it('should do nothing when the queue is empty', function () {
+            xit('should do nothing when the queue is empty', function () {
 
             });
 
-            it('should reduce the size of the queue by atEventQuantity', function () {
+            xit('should reduce the size of the queue by atEventQuantity', function () {
                 // If the queue length is non-zero, then...
                 // create a batch by splicing up until `this.options.flushAt`
                 // also, test that this reduces the size of the queue.
             });
 
-            it('should fulfill the queues promises', function () {
+            xit('should fulfill the queues promises', function () {
                 // Get a list of promises.
                 // Make each of the requests in the batch.
             })
 
-            it('should set _lastFlush with the current date', function () {
+            xit('should set _lastFlush with the current date', function () {
                 // Set `this._lastFlush` to the current date.
             });
 
-            it('should call _clearTimer if the queue hits zero', function () {
+            xit('should call _clearTimer if the queue hits zero', function () {
                 // If the queue length gets to zero, then clear the timer.
             });
 
