@@ -315,31 +315,6 @@ describe("keen", function() {
 
         });
 
-        // @todo: I need to test this in the literal sense, with proper examples
-        //        and logging to see when and how flushing is executed.
-
-        // By default the library will flush:
-        // * [x] Every N messages.
-        // * [x] If S milliseconds has passed since the last flush.
-
-        // Notes:
-        // * [x] Before flushing a message contains a promise.
-        // * [x] Configurable.
-        // * [x] If there are too many messages and the module cannot flush faster than it's 
-        //   receiving messages, it will stop accepting messages instead of growing the queue
-        //   until it runs out of memory... :)
-        // * [x] We should be able to flush manually.
-
-        // Code:
-        // * [x] Check things are constructed correctly.
-        // * [x] Create small triggers.
-        // * [x] Implement _enqueue().
-        // * [x] Implement _shouldFlush().
-        // * [ ] Implement flush().
-        // * [x] Implement _setTimer and _clearTimer().
-
-        // @todo: Remove the WIP comments above.
-
         describe('_enqueue()', function () {
             beforeEach(function (){
                 keen = require("../");
@@ -500,6 +475,7 @@ describe("keen", function() {
                 keen._setTimer();
                 should.exist(keen._timer);
             });
+
         });
 
         describe('_clearTimer', function () {
@@ -512,6 +488,7 @@ describe("keen", function() {
                 keen._clearTimer();
                 should.not.exist(keen._timer);
             });
+
         });        
     });
 });

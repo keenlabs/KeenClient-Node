@@ -223,15 +223,15 @@ function KeenApi(config) {
 		var enqueued = false;
 		if (this._queue.length >= this._flushOptions.maxQueueSize) {
 			console.error('KeenClient-Node failed to enqueue the event because the queue is full. ' +
-				        'Consider increasing the queue size.')
+				          'Consider increasing the queue size.')
 		} else {
 			this._queue.push(requestData);
 			this._setTimer();
 			enqueued = true;
-		}
 
-		if (enqueued && this._shouldFlush()) {
-			this.flush();
+			if (this._shouldFlush()) {
+				this.flush();
+			}
 		}
 
 		return enqueued;
@@ -282,15 +282,18 @@ function KeenApi(config) {
 	};
 
 	/**
-	 * Starts and sets a timer at `this._timer`. Timer checks whether it should 
-	 * be flushing - generally: N milliseconds has passed since the last flush
-	 * and the queue contains events.
+	 * Starts and sets a timer at `this._timer`.
+	 * Timer checks whether it should be flushing - generally:
+	 * N milliseconds has passed since the last flush or the queue contains events. 
+	 * It flushes if this is the case.
 	 */
 	this._setTimer = function () {
 		var self = this;
 		if (!this._timer) {
 			this._timer = setInterval(function () {
-				self._shouldFlush.apply(self);
+				if (self._shouldFlush.apply(self)) {
+					self.flush.apply(self);
+				}
 			}, this._flushOptions.timerInterval);
 		}
 	};
