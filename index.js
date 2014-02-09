@@ -216,6 +216,7 @@ function KeenApi(config) {
 
 	/**
 	 * Enqueues a message onto `this._queue`.
+	 * Checks whether it is time to flush, and then flushes if necessary.
 	 * @param {Object} requestData Event data to send to Keen.IO.
 	 */
 	this._enqueue = function (requestData) {
@@ -229,7 +230,7 @@ function KeenApi(config) {
 			enqueued = true;
 		}
 
-		if (enqueued && this._checkFlush()) {
+		if (enqueued && this._shouldFlush()) {
 			this.flush();
 		}
 
@@ -237,9 +238,9 @@ function KeenApi(config) {
 	};
 
 	/**
-	 *
+	 * Checks whether it is time to flush.
 	 */
-	this._checkFlush = function () {
+	this._shouldFlush = function () {
 		var self = this,
 			shouldFlush;
 
@@ -251,26 +252,45 @@ function KeenApi(config) {
 	};
 
 	/**
-	 *
+	 * Flush the queue. Reduces the queue length by `this._flushOptions.atEventQuantity`.
+	 * The queue is only filled up by using request.postQueue() which is currently used by only addEvent() and addEvents().
 	 */
 	this.flush = function () {
-		var requestData = this._queue.pop();
-		var promise = requestData.promise;
-		promise.end(function(err, res) {
-			processResponse(err, res, requestData.callback);
-		});
+		if (this._queue.length === 0) {
+			return false;
+		}
+
+        // If the queue length is non-zero, then:
+        // create a group by splicing up until `this._flushOptions.atEventQuantity`
+        var queueGroup = this._queue.splice(0, this._flushOptions.atEventQuantity);
+
+	    // Do each of the requests in the queue group.
+	    _.each(queueGroup, function (e) {
+			var promise = e.promise;
+			promise.end(function(err, res) {
+				processResponse(err, res, e.callback);
+			});
+	    });
+
+		this._lastFlush = new Date();
+
+		if (this._queue.length === 0) {
+			this._clearTimer();
+		}
+
+		return true;
 	};
 
 	/**
 	 * Starts and sets a timer at `this._timer`. Timer checks whether it should 
-	 * be flushing - generally: too long has passed since last flush and the queue
-	 * contains events.
+	 * be flushing - generally: N milliseconds has passed since the last flush
+	 * and the queue contains events.
 	 */
 	this._setTimer = function () {
 		var self = this;
 		if (!this._timer) {
 			this._timer = setInterval(function () {
-				self._checkFlush.apply(self);
+				self._shouldFlush.apply(self);
 			}, this._flushOptions.timerInterval);
 		}
 	};

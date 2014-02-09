@@ -328,15 +328,17 @@ describe("keen", function() {
         // * [x] If there are too many messages and the module cannot flush faster than it's 
         //   receiving messages, it will stop accepting messages instead of growing the queue
         //   until it runs out of memory... :)
-        // * [ ] We should be able to flush manually.
+        // * [x] We should be able to flush manually.
 
         // Code:
         // * [x] Check things are constructed correctly.
         // * [x] Create small triggers.
         // * [x] Implement _enqueue().
-        // * [x] Implement _checkFlush().
+        // * [x] Implement _shouldFlush().
         // * [ ] Implement flush().
         // * [x] Implement _setTimer and _clearTimer().
+
+        // @todo: Remove the WIP comments above.
 
         describe('_enqueue()', function () {
             beforeEach(function (){
@@ -373,10 +375,10 @@ describe("keen", function() {
                 setTimerSpy.called.should.be.true;
             });
 
-            it('should call flush if _checkFlush() returns true', function () {
+            it('should call flush if _shouldFlush() returns true', function () {
                 var flushSpy = sinon.spy();
                 keen.flush = flushSpy;                
-                keen._checkFlush = function () { return true; };
+                keen._shouldFlush = function () { return true; };
                 
                 keen._enqueue({ promise: {
                     end: function () {}
@@ -385,7 +387,7 @@ describe("keen", function() {
             });
         });
 
-        describe('_checkFlush()', function () {
+        describe('_shouldFlush()', function () {
 
             it("should return false if neither of the triggers returned true", function () {
                 keen._flushOptions.atEventQuantity = 10000;             
@@ -393,7 +395,7 @@ describe("keen", function() {
                 keen._queue = [];   
                 keen._lastFlush = new Date();
 
-                keen._checkFlush().should.be.false;
+                keen._shouldFlush().should.be.false;
             });
 
             it("should return true if too much time passed since last flush", function () {
@@ -405,7 +407,7 @@ describe("keen", function() {
                 timeHasPassedSinceThis = timeHasPassedSinceThis.setDate(timeHasPassedSinceThis.getDate() - 7);
                 keen._lastFlush = timeHasPassedSinceThis;
                 
-                keen._checkFlush().should.be.true;
+                keen._shouldFlush().should.be.true;
             });
 
             it("should return true if the length of the queue is too large", function () {            
@@ -415,34 +417,78 @@ describe("keen", function() {
                 keen._flushOptions.atEventQuantity = 5;
                 keen._queue = [1, 2, 3, 4, 5, 6];
 
-                keen._checkFlush().should.be.true;
+                keen._shouldFlush().should.be.true;
             });
 
         });
 
         describe('flush()', function () {
 
-            xit('should do nothing when the queue is empty', function () {
-
+            beforeEach(function (){
+                keen = require("../");
+                keen = keen.configure({
+                    projectId: projectId,
+                    writeKey: writeKey
+                });
             });
 
-            xit('should reduce the size of the queue by atEventQuantity', function () {
-                // If the queue length is non-zero, then...
-                // create a batch by splicing up until `this.options.flushAt`
-                // also, test that this reduces the size of the queue.
+            it('should do nothing when the queue is empty', function () {
+                keen.flush().should.be.false;
             });
 
-            xit('should fulfill the queues promises', function () {
-                // Get a list of promises.
-                // Make each of the requests in the batch.
-            })
-
-            xit('should set _lastFlush with the current date', function () {
-                // Set `this._lastFlush` to the current date.
+            it('should reduce the size of the queue by atEventQuantity', function () {
+                keen._flushOptions.atEventQuantity = 3;
+                keen._queue = [
+                    { promise: { end: function () {} }, callback: function () {} },
+                    { promise: { end: function () {} }, callback: function () {} },
+                    { promise: { end: function () {} }, callback: function () {} },
+                    { promise: { end: function () {} }, callback: function () {} },
+                    { promise: { end: function () {} }, callback: function () {} },
+                    { promise: { end: function () {} }, callback: function () {} },
+                    { promise: { end: function () {} }, callback: function () {} }
+                ];
+                keen.flush().should.be.true;
+                keen._queue.length.should.be.equal(4);
             });
 
-            xit('should call _clearTimer if the queue hits zero', function () {
-                // If the queue length gets to zero, then clear the timer.
+            it('should fulfill the queues promises', function (done) {
+                keen._flushOptions.atEventQuantity = 1;
+
+                var eventCollection = "testCollection";
+                mockPostRequest("/3.0/projects/" + projectId + "/events/" + eventCollection, 201, {success: true});
+                keen.addEvent(eventCollection, {"a": "b"}, function (error, responseBody) {
+                    should.not.exist(error);
+                    JSON.stringify(responseBody).should.equal(JSON.stringify({ success: true }));
+                    done();
+                });
+            });
+
+            it('should change _lastFlush', function () {
+                var previousFlush = keen._lastFlush;
+
+                keen._queue = [
+                    { promise: { end: function () {} }, callback: function () {} },
+                    { promise: { end: function () {} }, callback: function () {} },
+                    { promise: { end: function () {} }, callback: function () {} }
+                ];
+                keen.flush().should.be.true;
+
+                keen._lastFlush.should.not.be.eql(previousFlush);
+            });
+
+            it('should call _clearTimer if the queue hits zero', function () {
+                var clearTimerSpy = sinon.spy();
+                keen._clearTimer = clearTimerSpy;
+
+                keen._flushOptions.atEventQuantity = 10;
+                keen._queue = [
+                    { promise: { end: function () {} }, callback: function () {} },
+                    { promise: { end: function () {} }, callback: function () {} },
+                    { promise: { end: function () {} }, callback: function () {} }
+                ];
+                keen.flush().should.be.true;
+                keen._queue.length.should.be.equal(0);
+                clearTimerSpy.called.should.be.true;
             });
 
         });
@@ -466,6 +512,6 @@ describe("keen", function() {
                 keen._clearTimer();
                 should.not.exist(keen._timer);
             });
-        });
+        });        
     });
 });
