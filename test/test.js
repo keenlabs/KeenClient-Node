@@ -325,7 +325,7 @@ describe("keen", function() {
         // Notes:
         // * [x] Before flushing a message contains a promise.
         // * [x] Configurable.
-        // * [ ] If there are too many messages and the module cannot flush faster than it's 
+        // * [x] If there are too many messages and the module cannot flush faster than it's 
         //   receiving messages, it will stop accepting messages instead of growing the queue
         //   until it runs out of memory... :)
         // * [ ] We should be able to flush manually.
@@ -333,27 +333,55 @@ describe("keen", function() {
         // Code:
         // * [x] Check things are constructed correctly.
         // * [x] Create small triggers.
-        // * [ ] Implement _enqueue().
+        // * [x] Implement _enqueue().
         // * [x] Implement _checkFlush().
         // * [ ] Implement flush().
         // * [x] Implement _setTimer and _clearTimer().
 
         describe('_enqueue()', function () {
-
-            xit('should drop data if the queue has expanded beyond the max queue size', function () {
-
+            beforeEach(function (){
+                keen = require("../");
+                keen = keen.configure({
+                    projectId: projectId,
+                    writeKey: writeKey
+                });
             });
 
-            xit('should push to the queue on normal operation', function () {
-
+            it('should drop data if the queue has expanded beyond the max queue size', function () {
+                keen._flushOptions.maxQueueSize = 0;
+                keen._queue = [1, 2, 3, 4, 5];
+                keen._enqueue({ promise: null, callback: null }).should.be.false;
             });
 
-            xit('should set the timer, if it has not been set already', function () {
+            it('should push to the queue on normal operation', function () {
+                keen.flush = function () { /* do nothing to the queue...! */ }
 
+                keen._queue.length.should.be.equal(0);
+                keen._enqueue({ promise: {
+                    end: function () {}
+                }, callback: function () {} }).should.be.true;
+                keen._queue.length.should.be.equal(1);
             });
 
-            xit('should call flush if _checkFlush() returns true', function () {
+            it('should set the timer, if it has not been set already', function () {
+                var setTimerSpy = sinon.spy();
+                keen._setTimer = setTimerSpy;
 
+                keen._enqueue({ promise: {
+                    end: function () {}
+                }, callback: function () {} }).should.be.true;
+                setTimerSpy.called.should.be.true;
+            });
+
+            it('should call flush if _checkFlush() returns true', function () {
+                var flushSpy = sinon.spy();
+                keen.flush = flushSpy;                
+                keen._checkFlush = function () { return true; };
+                
+                keen._enqueue({ promise: {
+                    end: function () {}
+                }, callback: function () {} }).should.be.true;
+                flushSpy.called.should.be.true;
             });
         });
 

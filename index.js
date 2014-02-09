@@ -219,10 +219,21 @@ function KeenApi(config) {
 	 * @param {Object} requestData Event data to send to Keen.IO.
 	 */
 	this._enqueue = function (requestData) {
-		var promise = requestData.promise;
-		promise.end(function(err, res) {
-			processResponse(err, res, requestData.callback);
-		});
+		var enqueued = false;
+		if (this._queue.length >= this._flushOptions.maxQueueSize) {
+			console.error('KeenClient-Node failed to enqueue the event because the queue is full. ' +
+				        'Consider increasing the queue size.')
+		} else {
+			this._queue.push(requestData);
+			this._setTimer();
+			enqueued = true;
+		}
+
+		if (enqueued && this._checkFlush()) {
+			this.flush();
+		}
+
+		return enqueued;
 	};
 
 	/**
@@ -243,7 +254,11 @@ function KeenApi(config) {
 	 *
 	 */
 	this.flush = function () {
-
+		var requestData = this._queue.pop();
+		var promise = requestData.promise;
+		promise.end(function(err, res) {
+			processResponse(err, res, requestData.callback);
+		});
 	};
 
 	/**
