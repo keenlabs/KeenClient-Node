@@ -128,7 +128,7 @@ function KeenApi(config) {
 				}
 				data[collection].push(item);
 			});
-			request.post(this.writeKey, '/projects/' + projectId + '/events', data, callback);
+			request.queuePost(this.writeKey, '/projects/' + projectId + '/events', data, callback);
 		}
 	};
 
