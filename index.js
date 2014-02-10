@@ -160,8 +160,8 @@ function KeenApi(config) {
 			throw new Error('You must specify a nun-null, non-empty \'' + keyType + '\' in your config object.');
 		}
 
-		if(method === 'post') {
-			return request.post(this[keyType], path, params, callback);
+		if(method === 'post' || method === 'get') {
+			return request[method](this[keyType], path, params, callback);
 		}
 
 		request[method](this[keyType], path, callback);
