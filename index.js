@@ -179,11 +179,11 @@ function KeenApi(config) {
             }
 
             //stringify the query to map to RESTFul params
-            if (query && query.filters){
+            if (query && query.filters instanceof Array){
                 //flatten the filter into a stringified array
                 query.filters = JSON.stringify(query.filters);
             }
-            if (query && query.group_by){
+            if (query && query.group_by instanceof Array){
                 //flatten the filter into a stringified array
                 query.group_by = JSON.stringify(query.group_by);
             }
