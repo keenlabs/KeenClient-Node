@@ -348,7 +348,7 @@ describe("keen", function() {
               });
               
               it('should return an error when unsuccessful', function(done){
-                var mockResponse = { error_code: 'FooError', message: 'no foo' };
+                var mockResponse = { error_code: 'ResourceNotFoundError', message: 'no foo' };
                 mockGetRequest(query_path, 500, mockResponse);
                 analysis.params = {};
                 var test = keen.query(analysis, function(err, res){
@@ -379,7 +379,7 @@ describe("keen", function() {
               });
               
               it('should return a single error when unsuccessful', function(done){
-                var mockResponse = { error_code: 'FooError', message: 'no foo' };
+                var mockResponse = { error_code: 'ResourceNotFoundError', message: 'no foo' };
                 mockGetRequest(query_path, 500, mockResponse);
                 analysis.params = {};
                 var test = keen.query([analysis, analysis, analysis], function(err, res){
@@ -465,7 +465,7 @@ describe("keen", function() {
             });
             
             it('should return an error when unsuccessful', function(done){
-              var mockResponse = { error_code: 'FooError', message: 'no foo' };
+              var mockResponse = { error_code: 'ResourceNotFoundError', message: 'no foo' };
               mockGetRequest(funnel_path, 500, mockResponse);
               var test = keen.query(funnel, function(err, res){
                 err.should.be.an.instanceOf(Error);
@@ -494,7 +494,7 @@ describe("keen", function() {
             });
             
             it('should return a single error when unsuccessful', function(done){
-              var mockResponse = { error_code: 'FooError', message: 'no foo' };
+              var mockResponse = { error_code: 'ResourceNotFoundError', message: 'no foo' };
               mockGetRequest(funnel_path, 500, mockResponse);
               var test = keen.query([funnel, funnel, funnel], function(err, res){
                 err.should.be.an.instanceOf(Error);
