@@ -1,11 +1,14 @@
 /* jshint quotmark:false,indent:4,maxlen:600 */
 var should = require("should");
+var _ = require('underscore');
 
 describe("keen", function() {
 
     var keen;
+    var Keen = require("../");
     var projectId = "fakeProjectId";
     var writeKey = "fakeWriteKey";
+    var readKey = "fakeReadKey";
     var nock = require("nock");
 
     beforeEach(function() {
@@ -230,4 +233,186 @@ describe("keen", function() {
             });
         });
     });
+    
+    
+    describe('Queries', function() {
+      
+      beforeEach(function() {
+        nock.cleanAll();
+        Keen = require("../");
+        keen = Keen.configure({
+          projectId: projectId,
+          readKey: readKey
+        });
+      });
+      
+      describe('<Client>.query method', function(){
+        
+        it('should be a method', function(){
+          keen['query'].should.be.a.Function;
+        });
+        
+        it('should throw an error when passed an invalid object', function(){
+          (function(){
+            keen.query(null);
+          }).should.throwError();
+          (function(){
+            keen.query({});
+          }).should.throwError();
+          (function(){
+            keen.query(0);
+          }).should.throwError();
+          
+          // This should be removed when 'saved_query' support is validated
+          (function(){
+            keen.query('string');
+          }).should.throwError();
+        });
+        
+      });
+      
+      describe('Analysis Types', function(){
+        
+        var analyses = [
+          'Count', 
+          'Count_Unique', 
+          'Sum', 
+          'Average', 
+          'Minimum', 
+          'Maximum', 
+          'Select_Unique', 
+          'Extraction',
+          'Funnel'
+        ];
+        var basic_config = { timeframe: 'this_7_days' };
+        var funnel_config = { 
+          steps: [
+            { event_collection: "view_landing_page", actor_property: "user.id" },
+            { event_collection: "sign_up", actor_property: "user.id" }
+          ]
+        };
+        
+        _.each(analyses, function(type){
+          var method = type.replace('_','');
+          var config = (type !== 'Funnel') ? basic_config : _.extend(funnel_config, basic_config);
+          var analysis = new Keen[method]('eventCollection', config);
+          
+          var query_path = "/3.0/projects/" + projectId;
+              query_path += "/queries/" + type.toLowerCase();
+              query_path += "?event_collection=" + analysis.event_collection;
+          
+          it('should be an instance of Keen.' + method, function(){
+            analysis.should.be.an.instanceOf(Keen[method]);
+          });
+          
+          it('should have a correct event_collection property', function(){
+            analysis.should.have.property('event_collection');
+            analysis.event_collection.should.eql('eventCollection');
+          });
+          
+          it('should throw an error if event_collection is missing', function(){
+            (function(){
+              var flawed_analysis = new Keen[method]();
+            }).should.throwError();
+          });
+          
+          it('should have a correct path propery', function(){
+            analysis.should.have.property('path');
+            analysis.path.should.eql('/queries/' + type.toLowerCase());
+          });
+          
+          it('should have a params property with supplied parameters', function(){
+            analysis.should.have.property('params');
+            analysis.params.should.have.property('timeframe', 'this_7_days');
+          });
+          
+          it('should have a #get method that returns a requested parameter', function(){
+            analysis.get.should.be.a.Function;
+            analysis.get('timeframe').should.eql('this_7_days');
+          });
+          
+          it('should have a #set method that sets all supplied properties', function(){
+            analysis.set.should.be.a.Function;
+            analysis.set({ group_by: 'property', target_property: 'referrer' });
+            analysis.params.should.have.property('group_by', 'property');
+            analysis.params.should.have.property('target_property', 'referrer');
+          });
+          
+          describe('When handled by <Client>.query method', function(){
+            
+            beforeEach(function() {
+              nock.cleanAll();
+              this.path = "/3.0/projects/" + projectId;
+              this.path += "/queries/" + type.toLowerCase();
+              this.path += "?event_collection=" + analysis.event_collection;
+            });
+
+            describe('Single analyses', function(){
+              
+              it('should return a response when successful', function(done){
+                var mockResponse = { result: 1 };
+                mockGetRequest(query_path, 200, mockResponse);
+                analysis.params = {};
+                var test = keen.query(analysis, function(err, res){
+                  (err === null).should.be.true;
+                  res.should.eql(mockResponse);
+                  done();
+                });
+              });
+              
+              it('should return an error when unsuccessful', function(done){
+                var mockResponse = { error_code: 'FooError', message: 'no foo' };
+                mockGetRequest(query_path, 500, mockResponse);
+                analysis.params = {};
+                var test = keen.query(analysis, function(err, res){
+                  err.should.be.an.instanceOf(Error);
+                  err.should.have.property('code', mockResponse.error_code);
+                  done();
+                });
+              });
+              
+            });
+            
+            
+            describe('Multiple analyses', function(){
+
+              it('should return a single response when successful', function(done){
+                var mockResponse = { result: 1 };
+                mockGetRequest(query_path, 200, mockResponse);
+                mockGetRequest(query_path, 200, mockResponse);
+                mockGetRequest(query_path, 200, mockResponse);
+                analysis.params = {};
+                var test = keen.query([analysis, analysis, analysis], function(err, res){
+                  (err === null).should.be.true;
+                  res.should.be.an.Array;
+                  res.should.have.length(3);
+                  res.should.eql([mockResponse, mockResponse, mockResponse]);
+                  done();
+                });
+              });
+              
+              it('should return a single error when unsuccessful', function(done){
+                var mockResponse = { error_code: 'FooError', message: 'no foo' };
+                mockGetRequest(query_path, 500, mockResponse);
+                analysis.params = {};
+                var test = keen.query([analysis, analysis, analysis], function(err, res){
+                  err.should.be.an.instanceOf(Error);
+                  err.should.have.property('code', mockResponse.error_code);
+                  done();
+                });
+              });
+            });
+            
+            
+          });
+          
+        });
+        
+      });
+      
+      
+      
+      
+    });
+    
 });
