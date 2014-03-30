@@ -281,22 +281,12 @@ describe("keen", function() {
           'Minimum', 
           'Maximum', 
           'Select_Unique', 
-          'Extraction',
-          'Funnel'
+          'Extraction'
         ];
-        var basic_config = { timeframe: 'this_7_days' };
-        var funnel_config = { 
-          steps: [
-            { event_collection: "view_landing_page", actor_property: "user.id" },
-            { event_collection: "sign_up", actor_property: "user.id" }
-          ]
-        };
         
         _.each(analyses, function(type){
           var method = type.replace('_','');
-          var config = (type !== 'Funnel') ? basic_config : _.extend(funnel_config, basic_config);
-          var analysis = new Keen[method]('eventCollection', config);
-          
+          var analysis = new Keen[method]('eventCollection', { timeframe: 'this_7_days' });
           var query_path = "/3.0/projects/" + projectId;
               query_path += "/queries/" + type.toLowerCase();
               query_path += "?event_collection=" + analysis.event_collection;
@@ -318,7 +308,7 @@ describe("keen", function() {
           
           it('should have a correct path propery', function(){
             analysis.should.have.property('path');
-            analysis.path.should.eql('/queries/' + type.toLowerCase());
+            analysis.path.should.eql('/queries/' + type.toLowerCase() + '?event_collection=eventCollection');
           });
           
           it('should have a params property with supplied parameters', function(){
@@ -342,9 +332,6 @@ describe("keen", function() {
             
             beforeEach(function() {
               nock.cleanAll();
-              this.path = "/3.0/projects/" + projectId;
-              this.path += "/queries/" + type.toLowerCase();
-              this.path += "?event_collection=" + analysis.event_collection;
             });
 
             describe('Single analyses', function(){
@@ -411,7 +398,119 @@ describe("keen", function() {
       });
       
       
+      describe('Funnels', function(){
+        
+        var funnel = new Keen.Funnel({ 
+          steps: [
+            { event_collection: "view_landing_page", actor_property: "user.id" },
+            { event_collection: "sign_up", actor_property: "user.id" }
+          ]
+        });
+        var funnel_path = "/3.0/projects/" + projectId + "/queries/funnel";
+            funnel_path += "?steps[0][event_collection]=view_landing_page";
+            funnel_path += "&steps[0][actor_property]=user.id";
+            funnel_path += "&steps[1][event_collection]=sign_up";
+            funnel_path += "&steps[1][actor_property]=user.id";
+            funnel_path += "&timeframe=this_21_days";
+        
+        it('should be an instance of Keen.Funnel', function(){
+          funnel.should.be.an.instanceOf(Keen.Funnel);
+        });
+        
+        it('should throw an error if steps are missing', function(){
+          (function(){
+            var flawed_funnel = new Keen.Funnel();
+          }).should.throwError();
+        });
+        
+        it('should have a correct path propery', function(){
+          funnel.should.have.property('path');
+          funnel.path.should.eql('/queries/funnel');
+        });
+        
+        it('should have a params property with supplied parameters', function(){
+          funnel.should.have.property('params');
+          funnel.params.should.have.property('steps');
+          funnel.params.steps.should.be.an.Array;
+        });
+        
+        it('should have a #set method that sets all supplied properties', function(){
+          funnel.set.should.be.a.Function;
+          funnel.set({ timeframe: 'this_21_days' });
+          funnel.params.should.have.property('timeframe', 'this_21_days');
+        });
+        
+        it('should have a #get method that returns a requested parameter', function(){
+          funnel.get.should.be.a.Function;
+          funnel.get('steps').should.be.an.Array;
+          funnel.get('timeframe').should.eql('this_21_days');
+        });
+        
+        describe('When handled by <Client>.query method', function(){
+          
+          beforeEach(function() {
+            nock.cleanAll();
+          });
+
+          describe('Single analyses', function(){
+            
+            it('should return a response when successful', function(done){
+              var mockResponse = { result: 1 };
+              mockGetRequest(funnel_path, 200, mockResponse);
+              var test = keen.query(funnel, function(err, res){
+                (err === null).should.be.true;
+                res.should.eql(mockResponse);
+                done();
+              });
+            });
+            
+            it('should return an error when unsuccessful', function(done){
+              var mockResponse = { error_code: 'FooError', message: 'no foo' };
+              mockGetRequest(funnel_path, 500, mockResponse);
+              var test = keen.query(funnel, function(err, res){
+                err.should.be.an.instanceOf(Error);
+                err.should.have.property('code', mockResponse.error_code);
+                done();
+              });
+            });
+            
+          });
+          
+          
+          describe('Multiple analyses', function(){
+
+            it('should return a single response when successful', function(done){
+              var mockResponse = { result: 1 };
+              mockGetRequest(funnel_path, 200, mockResponse);
+              mockGetRequest(funnel_path, 200, mockResponse);
+              mockGetRequest(funnel_path, 200, mockResponse);
+              var test = keen.query([funnel, funnel, funnel], function(err, res){
+                (err === null).should.be.true;
+                res.should.be.an.Array;
+                res.should.have.length(3);
+                res.should.eql([mockResponse, mockResponse, mockResponse]);
+                done();
+              });
+            });
+            
+            it('should return a single error when unsuccessful', function(done){
+              var mockResponse = { error_code: 'FooError', message: 'no foo' };
+              mockGetRequest(funnel_path, 500, mockResponse);
+              var test = keen.query([funnel, funnel, funnel], function(err, res){
+                err.should.be.an.instanceOf(Error);
+                err.should.have.property('code', mockResponse.error_code);
+                done();
+              });
+            });
+            
+          });
+          
+          
+        });
+        
       
+        
+      });
       
     });
     
