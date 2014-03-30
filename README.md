@@ -82,6 +82,7 @@ keen.addEvents({
 ```
 
 ### Generate Scoped Key
+
 ```javascript
 var keen = require("keen.io");
 var apiKey = "YOUR_API_KEY";
@@ -101,12 +102,14 @@ var keen = keen.configure({
 
 ## Queries
 
-Analyses are first-class citizens, complete with parameter getters and setters.
+Analyses are first-class citizens, complete with parameter getters and setters. 
+
+The `<Client>.query` method is available on each configured client instance to run one or many analyses on a given project. Read more about running multiple analyses below.
 
 **Format:**
 
 ```
-  var your_analysis = new Keen.<AnalysisType>(eventCollection, attributes);
+var your_analysis = new Keen.<AnalysisType>(eventCollection, attributes);
 ```
 
 ### Example Usage
