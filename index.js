@@ -71,16 +71,16 @@ function KeenApi(config) {
 
 	this.projects = {
 		list: function(callback) {
-			request.get(this.masterKey, '/projects', callback);
+			request.get(self.masterKey, '/projects', callback);
 		},
 		view: function(projectId, callback) {
-			request.get(this.masterKey, '/projects/' + projectId, callback);
+			request.get(self.masterKey, '/projects/' + projectId, callback);
 		}
 	};
 
 	this.events = {
 		list: function(projectId, callback) {
-			request.get(this.masterKey, '/projects/' + projectId + '/events', callback);
+			request.get(self.masterKey, '/projects/' + projectId + '/events', callback);
 		},
 		insert: function(projectId, events, callback) {
 			events = events || [];
@@ -96,25 +96,25 @@ function KeenApi(config) {
 				}
 				data[collection].push(item);
 			});
-			request.post(this.writeKey, '/projects/' + projectId + '/events', data, callback);
+			request.post(self.writeKey, '/projects/' + projectId + '/events', data, callback);
 		}
 	};
 
 	this.properties = {
 		view: function(projectId, collection, property, callback) {
-			request.get(this.masterKey, '/projects/' + projectId + '/events/' + collection + '/properties/' + property, callback);
+			request.get(self.masterKey, '/projects/' + projectId + '/events/' + collection + '/properties/' + property, callback);
 		},
 		remove: function(projectId, collection, property, callback) {
-			request.del(this.masterKey, '/projects/' + projectId + '/events/' + collection + '/properties/' + property, callback);
+			request.del(self.masterKey, '/projects/' + projectId + '/events/' + collection + '/properties/' + property, callback);
 		}
 	};
 
 	this.collections = {
 		view: function(projectId, collection, callback) {
-			request.get(this.masterKey, '/projects/' + projectId + '/events/' + collection, callback);
+			request.get(self.masterKey, '/projects/' + projectId + '/events/' + collection, callback);
 		},
 		remove: function(projectId, collection, callback) {
-			request.del(this.masterKey, '/projects/' + projectId + '/events/' + collection, callback);
+			request.del(self.masterKey, '/projects/' + projectId + '/events/' + collection, callback);
 		}
 	};
 
