@@ -71,7 +71,7 @@ function KeenApi(config) {
 
 	this.projects = {
 		list: function(callback) {
-			request.get(self.masterKey, '/projects', callback);
+			request.get(self.masterKey, '/projects', null, callback);
 		},
 		view: function(projectId, callback) {
 			request.get(self.masterKey, '/projects/' + projectId, callback);
@@ -111,7 +111,7 @@ function KeenApi(config) {
 
 	this.collections = {
 		view: function(projectId, collection, callback) {
-			request.get(self.masterKey, '/projects/' + projectId + '/events/' + collection, callback);
+			request.get(self.masterKey, '/projects/' + projectId + '/events/' + collection, null, callback);
 		},
 		remove: function(projectId, collection, callback) {
 			request.del(self.masterKey, '/projects/' + projectId + '/events/' + collection, callback);
