@@ -17,10 +17,10 @@ Use npm to install!
 ### Initialization
 
 ```javascript
-var keen = require('keen.io');
+var Keen = require('keen.io');
 
 // Configure instance. Only projectId and writeKey are required to send data.
-var keen = keen.configure({
+var keen = Keen.configure({
 	projectId: "<project_id>",
 	writeKey: "<write_key>",
 	readKey: "<read_key>",
@@ -31,20 +31,20 @@ var keen = keen.configure({
 You can also have multiple instances if you are connecting to multiple KeenIO accounts in the one project (probably edge case).
 
 ```javascript
-var keen = require('keen.io');
+var Keen = require('keen.io');
 
 // Configure instance with API Key
-var keen1 = keen.configure({...});
-var keen2 = keen.configure({...});
+var keen1 = Keen.configure({...});
+var keen2 = Keen.configure({...});
 ```
 
 In the future there will be the ability to pass options into the initialisation such as batching inserts, etc. The structure of this hasn't been defined yet but will look something like the following.
 
 ```javascript
-var keen = require('keen.io');
+var Keen = require('keen.io');
 
 // Configure instance with API Key and options
-var keen = keen.configure({ 
+var keen = Keen.configure({ 
 	projectId: "<project_id>",
 	batchEventInserts: 30 
 });
@@ -53,8 +53,8 @@ var keen = keen.configure({
 ### Send Events
 
 ```javascript
-var keen = require("keen.io");
-var keen = keen.configure({
+var Keen = require("keen.io");
+var keen = Keen.configure({
 	projectId: "<project_id>",
 	writeKey: "<write_key>"
 });
@@ -84,9 +84,9 @@ keen.addEvents({
 ### Generate Scoped Key
 
 ```javascript
-var keen = require("keen.io");
+var Keen = require("keen.io");
 var apiKey = "YOUR_API_KEY";
-var scopedKey = keen.encryptScopedKey(apiKey, {
+var scopedKey = Keen.encryptScopedKey(apiKey, {
 	"allowed_operations": ["read"],
 	"filters": [{
 		"property_name": "account.id",
@@ -94,7 +94,7 @@ var scopedKey = keen.encryptScopedKey(apiKey, {
 		"property_value": "123"
 	}]
 });
-var keen = keen.configure({
+var keen = Keen.configure({
 	projectId: "<project_id>";
 	readKey: scopedKey
 });
@@ -104,12 +104,12 @@ var keen = keen.configure({
 
 Analyses are first-class citizens, complete with parameter getters and setters. 
 
-The `<Client>.query` method is available on each configured client instance to run one or many analyses on a given project. Read more about running multiple analyses below.
+The `<Client>.run` method is available on each configured client instance to run one or many analyses on a given project. Read more about running multiple analyses below.
 
 **Format:**
 
 ```
-var your_analysis = new Keen.<AnalysisType>(eventCollection, attributes);
+var your_analysis = new Keen.Query(analysisType, params);
 ```
 
 ### Example Usage
@@ -121,45 +121,48 @@ var keen = Keen.configure({
   readKey: "your_read_key"
 });
 
-var count = new Keen.Count("pageview", {
+var count = new Keen.Query("count", {
+  event_collection: "pageviews",
   group_by: "property",
   timeframe: "this_7_days"
 });
 
 // Send query
-keen.query(count, function(err, response){
+keen.run(count, function(err, response){
   if (err) return console.log(err);
   // response.result
 });
 ```
 
 
-### Analysis Types
+### Query Analysis Types
 
-`Keen.Count`
+All of the following analyses require an `event_collection` parameter. Some analyses have additional requirements, which are noted below.
 
-`Keen.CountUnique`
+`count`
 
-`Keen.Sum` requires a `target_property` attribute, where value is an integer
+`count_unique`
 
-`Keen.Average` requires a `target_property` attribute, where value is an integer
+`sum` requires a `target_property` parameter, where value is an integer
 
-`Keen.Maximum` requires a `target_property` attribute, where value is an integer
+`average` requires a `target_property` parameter, where value is an integer
 
-`Keen.Minimum` requires a `target_property` attribute, where value is an integer
+`maximum` requires a `target_property` parameter, where value is an integer
 
-`Keen.SelectUnique` requires a `target_property` attribute
+`minimum` requires a `target_property` parameter, where value is an integer
 
-`Keen.Extraction` 
+`select_unique` requires a `target_property` parameter
+
+`extraction` 
 
 **A note about extractions:** supply an optional `email` attribute to be notified when your extraction is ready for download. If email is not specified, your extraction will be processed synchronously and your data will be returned as JSON.
 
 `Keen.Funnel` requires a `steps` attribute
 
-**A note about funnels:** funnels require a `steps` as an array of objects. 
+**A note about funnels:** funnels require a `steps` as an array of objects. Each step requires an `event_collection` and `actor_property` parameter.
 
 ```
-var funfunfunnel = new Keen.Funnel({
+var funfunfunnel = new Keen.Query('funnel', {
   steps: [
     {
   	  event_collection: "view_landing_page",
@@ -179,21 +182,23 @@ Learn more about funnels in the [API reference](https://keen.io/docs/data-analys
 
 ### Run multiple analyses at once
 
-The `<Client>.query` method accepts an individual analysis or array of analyses. In the latter scenario, the callback is fired once all requests have completed without error. Query results are then returned in a correctly sequenced array.
+The `<Client>.run` method accepts an individual analysis or array of analyses. In the latter scenario, the callback is fired once all requests have completed without error. Query results are then returned in a correctly sequenced array.
 
 Query results are also attached to the query object itself, and can be referenced as `this.data`. 
 
 ```
-var avg_revenue = new Keen.Average("purchase  ", { 
+var avg_revenue = new Keen.Query("average", { 
+  event_collection: "purchase",
   target_property: "price",
   group_by: "geo.country" 
 });
-var max_revenue = new Keen.Maximum("purchase", { 
+var max_revenue = new Keen.Query("maximum", { 
+  event_collection: "purchase",
   target_property: "price",
   group_by: "geo.country" 
 });
   
-var mashup = keen.query([avg_revenue, max_revenue], function(err, res){
+var mashup = keen.run([avg_revenue, max_revenue], function(err, res){
   if (err) return console.log(err);
   // res[0].result or this.data[0] (avg_revenue)
   // res[1].result or this.data[1] (max_revenue)
