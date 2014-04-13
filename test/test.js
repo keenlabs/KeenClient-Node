@@ -2,6 +2,21 @@
 var should = require("should");
 var _ = require('underscore');
 
+var buildQueryString = function(params){
+  var query = [];
+  for (var key in params) {
+    if (params[key]) {
+      var value = params[key];
+      if (Object.prototype.toString.call(value) !== '[object String]') {
+        value = JSON.stringify(value);
+      }
+      value = encodeURIComponent(value);
+      query.push(key + '=' + value);
+    }
+  }
+  return "?" + query.join('&');
+};
+
 describe("keen", function() {
 
     var keen;
@@ -233,10 +248,10 @@ describe("keen", function() {
             });
         });
     });
-    
-    
+
+
     describe('Queries', function() {
-      
+
       beforeEach(function() {
         nock.cleanAll();
         Keen = require("../");
@@ -245,122 +260,112 @@ describe("keen", function() {
           readKey: readKey
         });
       });
-      
-      describe('<Client>.query method', function(){
-        
+
+      describe('<Client>.run method', function(){
+
         it('should be a method', function(){
-          keen['query'].should.be.a.Function;
+          keen['run'].should.be.a.Function;
         });
-        
+
         it('should throw an error when passed an invalid object', function(){
           (function(){
-            keen.query(null);
+            keen.run(null);
           }).should.throwError();
           (function(){
-            keen.query({});
+            keen.run({});
           }).should.throwError();
           (function(){
-            keen.query(0);
+            keen.run(0);
           }).should.throwError();
-          
+
           // This should be removed when 'saved_query' support is validated
           (function(){
-            keen.query('string');
+            keen.run('string');
           }).should.throwError();
         });
-        
+
       });
-      
+
       describe('Analysis Types', function(){
-        
+
         var analyses = [
-          'Count', 
-          'Count_Unique', 
-          'Sum', 
-          'Average', 
-          'Minimum', 
-          'Maximum', 
-          'Select_Unique', 
-          'Extraction'
+          'count',
+          'count_unique',
+          'sum',
+          'average',
+          'minimum',
+          'maximum',
+          'select_unique',
+          'extraction'
         ];
-        
+
         _.each(analyses, function(type){
-          var method = type.replace('_','');
-          var analysis = new Keen[method]('eventCollection', { timeframe: 'this_7_days' });
-          var query_path = "/3.0/projects/" + projectId;
-              query_path += "/queries/" + type.toLowerCase();
-              query_path += "?event_collection=" + analysis.event_collection;
-          
-          it('should be an instance of Keen.' + method, function(){
-            analysis.should.be.an.instanceOf(Keen[method]);
+          var analysis = new Keen.Query(type, {
+            event_collection: 'eventCollection',
+            timeframe: 'this_7_days'
           });
-          
-          it('should have a correct event_collection property', function(){
-            analysis.should.have.property('event_collection');
-            analysis.event_collection.should.eql('eventCollection');
+          var query_path = "/3.0/projects/" + projectId + "/queries/" + type;
+
+          it('should be an instance of Keen.Query', function(){
+            analysis.should.be.an.instanceOf(Keen.Query);
           });
-          
-          it('should throw an error if event_collection is missing', function(){
-            (function(){
-              var flawed_analysis = new Keen[method]();
-            }).should.throwError();
-          });
-          
+
           it('should have a correct path propery', function(){
             analysis.should.have.property('path');
-            analysis.path.should.eql('/queries/' + type.toLowerCase() + '?event_collection=eventCollection');
+            analysis.path.should.eql('/queries/' + type);
           });
-          
+
           it('should have a params property with supplied parameters', function(){
             analysis.should.have.property('params');
+            analysis.params.should.have.property('event_collection', 'eventCollection');
             analysis.params.should.have.property('timeframe', 'this_7_days');
           });
-          
+
           it('should have a #get method that returns a requested parameter', function(){
             analysis.get.should.be.a.Function;
             analysis.get('timeframe').should.eql('this_7_days');
           });
-          
+
           it('should have a #set method that sets all supplied properties', function(){
             analysis.set.should.be.a.Function;
             analysis.set({ group_by: 'property', target_property: 'referrer' });
             analysis.params.should.have.property('group_by', 'property');
             analysis.params.should.have.property('target_property', 'referrer');
           });
-          
-          describe('When handled by <Client>.query method', function(){
-            
+
+          describe('When handled by <Client>.run method', function(){
+
             beforeEach(function() {
               nock.cleanAll();
             });
 
             describe('Single analyses', function(){
-              
+
               it('should return a response when successful', function(done){
                 var mockResponse = { result: 1 };
                 mockGetRequest(query_path, 200, mockResponse);
                 analysis.params = {};
-                var test = keen.query(analysis, function(err, res){
+                var test = keen.run(analysis, function(err, res){
                   (err === null).should.be.true;
                   res.should.eql(mockResponse);
                   done();
                 });
               });
-              
+
               it('should return an error when unsuccessful', function(done){
                 var mockResponse = { error_code: 'ResourceNotFoundError', message: 'no foo' };
                 mockGetRequest(query_path, 500, mockResponse);
                 analysis.params = {};
-                var test = keen.query(analysis, function(err, res){
+                var test = keen.run(analysis, function(err, res){
                   err.should.be.an.instanceOf(Error);
                   err.should.have.property('code', mockResponse.error_code);
                   done();
                 });
               });
-              
+
             });
-            
-            
+
+
             describe('Multiple analyses', function(){
 
               it('should return a single response when successful', function(done){
@@ -369,7 +374,7 @@ describe("keen", function() {
                 mockGetRequest(query_path, 200, mockResponse);
                 mockGetRequest(query_path, 200, mockResponse);
                 analysis.params = {};
-                var test = keen.query([analysis, analysis, analysis], function(err, res){
+                var test = keen.run([analysis, analysis, analysis], function(err, res){
                   (err === null).should.be.true;
                   res.should.be.an.Array;
                   res.should.have.length(3);
@@ -377,106 +382,96 @@ describe("keen", function() {
                   done();
                 });
               });
-              
+
               it('should return a single error when unsuccessful', function(done){
                 var mockResponse = { error_code: 'ResourceNotFoundError', message: 'no foo' };
                 mockGetRequest(query_path, 500, mockResponse);
                 analysis.params = {};
-                var test = keen.query([analysis, analysis, analysis], function(err, res){
+                var test = keen.run([analysis, analysis, analysis], function(err, res){
                   err.should.be.an.instanceOf(Error);
                   err.should.have.property('code', mockResponse.error_code);
                   done();
                 });
               });
             });
-            
-            
+
+
           });
-          
+
         });
-        
+
       });
-      
-      
+
+
       describe('Funnels', function(){
-        
-        var funnel = new Keen.Funnel({ 
+
+        var funnel = new Keen.Query('funnel', {
           steps: [
             { event_collection: "view_landing_page", actor_property: "user.id" },
             { event_collection: "sign_up", actor_property: "user.id" }
-          ]
+          ],
+          timeframe: "this_21_days"
         });
-        var funnel_path = "/3.0/projects/" + projectId + "/queries/funnel";
-            funnel_path += "?steps[0][event_collection]=view_landing_page";
-            funnel_path += "&steps[0][actor_property]=user.id";
-            funnel_path += "&steps[1][event_collection]=sign_up";
-            funnel_path += "&steps[1][actor_property]=user.id";
-            funnel_path += "&timeframe=this_21_days";
-        
-        it('should be an instance of Keen.Funnel', function(){
-          funnel.should.be.an.instanceOf(Keen.Funnel);
+        var funnel_path = "/3.0/projects/" + projectId + "/queries/funnel" + buildQueryString(funnel.params);
+
+        it('should be an instance of Keen.Query', function(){
+          funnel.should.be.an.instanceOf(Keen.Query);
         });
-        
-        it('should throw an error if steps are missing', function(){
-          (function(){
-            var flawed_funnel = new Keen.Funnel();
-          }).should.throwError();
-        });
-        
+
         it('should have a correct path propery', function(){
           funnel.should.have.property('path');
           funnel.path.should.eql('/queries/funnel');
         });
-        
+
         it('should have a params property with supplied parameters', function(){
           funnel.should.have.property('params');
           funnel.params.should.have.property('steps');
           funnel.params.steps.should.be.an.Array;
         });
-        
+
         it('should have a #set method that sets all supplied properties', function(){
           funnel.set.should.be.a.Function;
           funnel.set({ timeframe: 'this_21_days' });
           funnel.params.should.have.property('timeframe', 'this_21_days');
         });
-        
+
         it('should have a #get method that returns a requested parameter', function(){
           funnel.get.should.be.a.Function;
           funnel.get('steps').should.be.an.Array;
           funnel.get('timeframe').should.eql('this_21_days');
         });
-        
-        describe('When handled by <Client>.query method', function(){
-          
+
+        describe('When handled by <Client>.run method', function(){
+
           beforeEach(function() {
             nock.cleanAll();
           });
 
           describe('Single analyses', function(){
-            
+
             it('should return a response when successful', function(done){
               var mockResponse = { result: 1 };
               mockGetRequest(funnel_path, 200, mockResponse);
-              var test = keen.query(funnel, function(err, res){
+              var test = keen.run(funnel, function(err, res){
                 (err === null).should.be.true;
                 res.should.eql(mockResponse);
                 done();
               });
             });
-            
+
             it('should return an error when unsuccessful', function(done){
               var mockResponse = { error_code: 'ResourceNotFoundError', message: 'no foo' };
               mockGetRequest(funnel_path, 500, mockResponse);
-              var test = keen.query(funnel, function(err, res){
+              var test = keen.run(funnel, function(err, res){
                 err.should.be.an.instanceOf(Error);
                 err.should.have.property('code', mockResponse.error_code);
                 done();
               });
             });
-            
+
           });
-          
-          
+
+
           describe('Multiple analyses', function(){
 
             it('should return a single response when successful', function(done){
@@ -484,7 +479,7 @@ describe("keen", function() {
               mockGetRequest(funnel_path, 200, mockResponse);
               mockGetRequest(funnel_path, 200, mockResponse);
               mockGetRequest(funnel_path, 200, mockResponse);
-              var test = keen.query([funnel, funnel, funnel], function(err, res){
+              var test = keen.run([funnel, funnel, funnel], function(err, res){
                 (err === null).should.be.true;
                 res.should.be.an.Array;
                 res.should.have.length(3);
@@ -492,26 +487,26 @@ describe("keen", function() {
                 done();
               });
             });
-            
+
             it('should return a single error when unsuccessful', function(done){
               var mockResponse = { error_code: 'ResourceNotFoundError', message: 'no foo' };
               mockGetRequest(funnel_path, 500, mockResponse);
-              var test = keen.query([funnel, funnel, funnel], function(err, res){
+              var test = keen.run([funnel, funnel, funnel], function(err, res){
                 err.should.be.an.instanceOf(Error);
                 err.should.have.property('code', mockResponse.error_code);
                 done();
               });
             });
-            
+
           });
-          
-          
+
+
         });
-        
-      
-        
+
+
+
       });
-      
+
     });
-    
+
 });

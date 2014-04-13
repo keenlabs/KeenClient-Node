@@ -191,8 +191,8 @@ function KeenApi(config) {
 			request.get(self.readKey, path, params, callback);
 		}
 	};
-	
-	_.extend(this, KeenQuery.client);
+
+	this.run = KeenQuery.client.run;
 }
 
 function configure(config) {
@@ -224,7 +224,6 @@ function decryptScopedKey(apiKey, scopedKey) {
 module.exports = {
 	configure: configure,
 	encryptScopedKey: encryptScopedKey,
-	decryptScopedKey: decryptScopedKey
+	decryptScopedKey: decryptScopedKey,
+	Query: KeenQuery.Query
 };
-
-_.extend(module.exports, KeenQuery.analyses);
