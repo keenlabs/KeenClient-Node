@@ -28,7 +28,13 @@
     },
     {
       "name": "Bogdan Cirlig",
+      "email": "",
       "url": "https://github.com/bibanul"
+    },
+    {
+      "name": "Jah Raphael",
+      "email": "jahraphael@yahoo.com",
+      "url": "https://github.com/jahraphael"
     }
   ],
   "main": "index.js",
