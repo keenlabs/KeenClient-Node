@@ -35,6 +35,10 @@ describe("keen", function() {
         });
     });
 
+    afterEach(function() {
+      nock.cleanAll();
+    });
+
     it("configure should set up client correctly", function() {
         keen = require("../");
         var projectId = "projectId";
@@ -292,6 +296,8 @@ describe("keen", function() {
           'count',
           'count_unique',
           'sum',
+          'median',
+          'percentile',
           'average',
           'minimum',
           'maximum',
@@ -301,7 +307,7 @@ describe("keen", function() {
 
         _.each(analyses, function(type){
           var analysis = new Keen.Query(type, {
-            event_collection: 'eventCollection',
+            eventCollection: 'eventCollection',
             timeframe: 'this_7_days'
           });
           var query_path = "/3.0/projects/" + projectId + "/queries/" + type;
@@ -331,6 +337,11 @@ describe("keen", function() {
             analysis.set({ group_by: 'property', target_property: 'referrer' });
             analysis.params.should.have.property('group_by', 'property');
             analysis.params.should.have.property('target_property', 'referrer');
+          });
+
+          it('should #set under_score attributes when camelCase attributes are supplied', function(){
+            analysis.set({ groupBy: 'property' });
+            analysis.params.should.have.property('group_by', 'property');
           });
 
           describe('When handled by <Client>.run method', function(){
@@ -408,7 +419,7 @@ describe("keen", function() {
         var funnel = new Keen.Query('funnel', {
           steps: [
             { event_collection: "view_landing_page", actor_property: "user.id" },
-            { event_collection: "sign_up", actor_property: "user.id" }
+            { eventCollection: "sign_up", actorProperty: "user.id" }
           ],
           timeframe: "this_21_days"
         });
@@ -426,7 +437,18 @@ describe("keen", function() {
         it('should have a params property with supplied parameters', function(){
           funnel.should.have.property('params');
           funnel.params.should.have.property('steps');
-          funnel.params.steps.should.be.an.Array;
+          funnel.params.steps.should.be.an.Array.with.lengthOf(2);
+        });
+
+        it('should have steps with parameters in proper case', function(){
+          funnel.params.steps[1].should.have.property('event_collection');
+          funnel.params.steps[1].should.have.property('actor_property');
+        });
+
+        it('should have a #get method that returns a requested parameter', function(){
+          funnel.get.should.be.a.Function;
+          funnel.get('steps').should.be.an.Array;
+          funnel.get('timeframe').should.eql('this_21_days');
         });
 
         it('should have a #set method that sets all supplied properties', function(){
@@ -435,11 +457,18 @@ describe("keen", function() {
           funnel.params.should.have.property('timeframe', 'this_21_days');
         });
 
-        it('should have a #get method that returns a requested parameter', function(){
-          funnel.get.should.be.a.Function;
-          funnel.get('steps').should.be.an.Array;
-          funnel.get('timeframe').should.eql('this_21_days');
+        it('should #set under_score step attributes when camelCase are supplied ', function(){
+          funnel.set({ steps: [
+              { eventCollection: "view_landing_page", actorProperty: "user.id" },
+              { eventCollection: "sign_up", actorProperty: "user.id" }
+            ] });
+          funnel.params.steps[0].should.have.property('event_collection', 'view_landing_page');
+          funnel.params.steps[0].should.have.property('actor_property', 'user.id');
+          funnel.params.steps[1].should.have.property('event_collection', 'sign_up');
+          funnel.params.steps[1].should.have.property('actor_property', 'user.id');
         });
+
+
 
         describe('When handled by <Client>.run method', function(){
 
