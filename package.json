@@ -20,6 +20,15 @@
       "name": "Daniel Kador",
       "email": "dan@keen.io",
       "url": "http://keen.io"
+    },
+    {
+      "name": "Dustin Larimer",
+      "email": "dustin@keen.io",
+      "url": "https://github.com/dustinlarimer"
+    },
+    {
+      "name": "Bogdan Cirlig",
+      "url": "https://github.com/bibanul"
     }
   ],
   "main": "index.js",
