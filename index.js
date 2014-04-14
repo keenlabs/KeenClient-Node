@@ -3,6 +3,9 @@ var _ = require('underscore');
 var crypto = require('crypto');
 var qs = require('querystring');
 
+var KeenRequests = require('./lib/requests');
+var KeenQuery = require('./lib/query');
+
 function KeenApi(config) {
 	if (!config) {
 		throw new Error("The 'config' parameter must be specified and must be a JS object.");
@@ -188,6 +191,8 @@ function KeenApi(config) {
 			request.get(self.readKey, path, params, callback);
 		}
 	};
+
+	this.run = KeenQuery.client.run;
 }
 
 function configure(config) {
@@ -219,5 +224,6 @@ function decryptScopedKey(apiKey, scopedKey) {
 module.exports = {
 	configure: configure,
 	encryptScopedKey: encryptScopedKey,
-	decryptScopedKey: decryptScopedKey
+	decryptScopedKey: decryptScopedKey,
+	Query: KeenQuery.Query
 };
