@@ -8,8 +8,8 @@ Keen IO is an online service to collect, analyze, and visualize your data.
 
 Use npm to install!
 
-```node
-`npm install keen.io`
+```sh
+npm install keen.io
 ```
 
 ## Examples
