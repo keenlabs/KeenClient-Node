@@ -124,6 +124,12 @@ describe("keen", function() {
         .reply(responseCode, responseBody, {"Content-Type": "application/json"});
     };
 
+    var mockDeleteRequest = function(path, responseCode, responseBody) {
+        nock("https://api.keen.io")
+        .delete(path)
+        .reply(responseCode, responseBody, {"Content-Type": "application/json"});
+    };
+
     it("addEvent should make correct HTTP request", function(done) {
         var eventCollection = "purchases";
 
@@ -253,6 +259,124 @@ describe("keen", function() {
         });
     });
 
+    describe('Public Methods', function() {
+      var projectId = "projectId";
+      var baseUrl = "https://api.keen.io/";
+      var apiVersion = "3.0";
+      var mockResponse = {result: 1};
+      var keen = require('../').configure({
+          projectId: projectId,
+          baseUrl: baseUrl,
+          apiVersion: apiVersion,
+          readKey: 'foo'
+      });
+
+      describe('projects', function() {
+        it('should be able to call "list"', function(done) {
+          mockGetRequest("/" + apiVersion + "/projects", 200, mockResponse);
+          keen.projects.list( function ( err, res ) {
+            (err === null).should.be.true;
+            res.should.eql(mockResponse);
+            done();
+          });
+        });
+
+        it('should be able to call "view"', function(done) {
+          mockGetRequest("/" + apiVersion + "/projects/" + projectId, 200, mockResponse);
+          keen.projects.view( projectId, function ( err, res ) {
+            (err === null).should.be.true;
+            res.should.eql(mockResponse);
+            done();
+          });
+        });
+      });
+
+      describe('events', function() {
+        it('should be able to call "list"', function(done) {
+          mockGetRequest("/" + apiVersion + "/projects/" + projectId + "/events", 200, mockResponse);
+          keen.events.list( projectId, function ( err, res ) {
+            (err === null).should.be.true;
+            res.should.eql(mockResponse);
+            done();
+          });
+        });
+
+        it('should be able to call "insert"', function(done) {
+          mockPostRequest("/" + apiVersion + "/projects/" + projectId + "/events", 200, mockResponse);
+          keen.events.insert( projectId, null, function ( err, res ) {
+            (err === null).should.be.true;
+            res.should.eql(mockResponse);
+            done();
+          });
+        });
+      });
+
+      describe('properties', function() {
+        var collection = "test_collection";
+        var property = "test_property";
+        it('should be able to call "view"', function(done) {
+          mockGetRequest("/" + apiVersion + "/projects/" + projectId + "/events/" + collection + "/properties/" + property, 200, mockResponse);
+          keen.properties.view( projectId, collection, property, function ( err, res ) {
+            (err === null).should.be.true;
+            res.should.eql(mockResponse);
+            done();
+          });
+        });
+
+        it('should be able to call "remove"', function(done) {
+          mockDeleteRequest("/" + apiVersion + "/projects/" + projectId + "/events/" + collection + "/properties/" + property, 200, mockResponse);
+          keen.properties.remove( projectId, collection, property, function ( err, res ) {
+            (err === null).should.be.true;
+            res.should.eql(mockResponse);
+            done();
+          });
+        });
+      });
+
+      describe('collections', function() {
+        var collection = "test_collection";
+        it('should be able to call "view"', function(done) {
+          mockGetRequest("/" + apiVersion + "/projects/" + projectId + "/events/" + collection, 200, mockResponse);
+          keen.collections.view( projectId, collection, function ( err, res ) {
+            (err === null).should.be.true;
+            res.should.eql(mockResponse);
+            done();
+          });
+        });
+
+        it('should be able to call "remove"', function(done) {
+          mockDeleteRequest("/" + apiVersion + "/projects/" + projectId + "/events/" + collection, 200, mockResponse);
+          keen.collections.remove( projectId, collection, function ( err, res ) {
+            (err === null).should.be.true;
+            res.should.eql(mockResponse);
+            done();
+          });
+        });
+      });
+
+      describe('queries', function() {
+        var collection = "test_collection";
+        it('should be able to call "extraction" with no params', function(done) {
+          var qs = buildQueryString( { event_collection: collection } );
+          mockGetRequest("/" + apiVersion + "/projects/" + projectId + "/queries/extraction" + qs, 200, mockResponse);
+          keen.queries.extraction( projectId, collection, null, function ( err, res ) {
+            (err === null).should.be.true;
+            res.should.eql(mockResponse);
+            done();
+          });
+        });
+
+        it('should not be able to override the "extraction" collection from params hash', function(done) {
+          var qs = buildQueryString( { event_collection: collection } );
+          mockGetRequest("/" + apiVersion + "/projects/" + projectId + "/queries/extraction" + qs, 200, mockResponse);
+          keen.queries.extraction( projectId, collection, { event_collection: "attempt_override" }, function ( err, res ) {
+            (err === null).should.be.true;
+            res.should.eql(mockResponse);
+            done();
+          });
+        });
+      });
+    });
 
     describe('Queries', function() {
 

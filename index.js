@@ -30,13 +30,13 @@ function KeenApi(config) {
 			KeenRequests.get.call(self, self.masterKey, '/projects', null, callback);
 		},
 		view: function(projectId, callback) {
-			KeenRequests.get.call(self, self.masterKey, '/projects/' + projectId, callback);
+			KeenRequests.get.call(self, self.masterKey, '/projects/' + projectId, null, callback);
 		}
 	};
 
 	this.events = {
 		list: function(projectId, callback) {
-			KeenRequests.get.call(self, self.masterKey, '/projects/' + projectId + '/events', callback);
+			KeenRequests.get.call(self, self.masterKey, '/projects/' + projectId + '/events', null, callback);
 		},
 		insert: function(projectId, events, callback) {
 			events = events || [];
@@ -58,7 +58,7 @@ function KeenApi(config) {
 
 	this.properties = {
 		view: function(projectId, collection, property, callback) {
-			KeenRequests.get.call(self, self.masterKey, '/projects/' + projectId + '/events/' + collection + '/properties/' + property, callback);
+			KeenRequests.get.call(self, self.masterKey, '/projects/' + projectId + '/events/' + collection + '/properties/' + property, null, callback);
 		},
 		remove: function(projectId, collection, property, callback) {
 			KeenRequests.del.call(self, self.masterKey, '/projects/' + projectId + '/events/' + collection + '/properties/' + property, callback);
