@@ -1,7 +1,5 @@
-var rest = require('superagent');
 var _ = require('underscore');
 var crypto = require('crypto');
-var qs = require('querystring');
 
 var KeenRequests = require('./lib/requests');
 var KeenQuery = require('./lib/query');
@@ -24,66 +22,21 @@ function KeenApi(config) {
 	var baseUrl = this.baseUrl;
 	var apiVersion = this.apiVersion;
 	var self = this;
-	var request = {
-		get: function(apiKey, path, data, callback) {
-			rest
-				.get(baseUrl + apiVersion + path)
-				.set('Authorization', apiKey)
-				.send(data || {})
-				.end(function(err, res) {
-					processResponse(err, res, callback);
-				});
-		},
-		post: function(apiKey, path, data, callback) {
-			rest
-				.post(baseUrl + apiVersion + path)
-				.set('Authorization', apiKey)
-				.set('Content-Type', 'application/json')
-				.send(data || {})
-				.end(function(err, res) {
-					processResponse(err, res, callback);
-				});
-		},
-		del: function(apiKey, path, callback) {
-			rest
-				.del(baseUrl + apiVersion + path)
-				.set('Authorization', apiKey)
-				.set('Content-Length', 0)
-				.end(function(err, res) {
-					processResponse(err, res, callback);
-				});
-		}
-	};
-
-	// Handle logic of processing response, including error messages
-	// The error handling should be strengthened over time to be more meaningful and robust
-	function processResponse(err, res, callback) {
-		callback = callback || function() {};
-
-		if (res && !res.ok && !err) {
-			var is_err = res.body && res.body.error_code;
-			err = new Error(is_err ? res.body.message : 'Unknown error occurred');
-			err.code = is_err ? res.body.error_code : 'UnknownError';
-		}
-
-		if (err) return callback(err);
-		return callback(null, res.body);
-	}
 
 	// Public Methods
 
 	this.projects = {
 		list: function(callback) {
-			request.get(self.masterKey, '/projects', null, callback);
+			KeenRequests.get.call(self, self.masterKey, '/projects', null, callback);
 		},
 		view: function(projectId, callback) {
-			request.get(self.masterKey, '/projects/' + projectId, callback);
+			KeenRequests.get.call(self, self.masterKey, '/projects/' + projectId, null, callback);
 		}
 	};
 
 	this.events = {
 		list: function(projectId, callback) {
-			request.get(self.masterKey, '/projects/' + projectId + '/events', callback);
+			KeenRequests.get.call(self, self.masterKey, '/projects/' + projectId + '/events', null, callback);
 		},
 		insert: function(projectId, events, callback) {
 			events = events || [];
@@ -99,25 +52,25 @@ function KeenApi(config) {
 				}
 				data[collection].push(item);
 			});
-			request.post(self.writeKey, '/projects/' + projectId + '/events', data, callback);
+			KeenRequests.post.call(self, self.writeKey, '/projects/' + projectId + '/events', data, callback);
 		}
 	};
 
 	this.properties = {
 		view: function(projectId, collection, property, callback) {
-			request.get(self.masterKey, '/projects/' + projectId + '/events/' + collection + '/properties/' + property, callback);
+			KeenRequests.get.call(self, self.masterKey, '/projects/' + projectId + '/events/' + collection + '/properties/' + property, null, callback);
 		},
 		remove: function(projectId, collection, property, callback) {
-			request.del(self.masterKey, '/projects/' + projectId + '/events/' + collection + '/properties/' + property, callback);
+			KeenRequests.del.call(self, self.masterKey, '/projects/' + projectId + '/events/' + collection + '/properties/' + property, callback);
 		}
 	};
 
 	this.collections = {
 		view: function(projectId, collection, callback) {
-			request.get(self.masterKey, '/projects/' + projectId + '/events/' + collection, null, callback);
+			KeenRequests.get.call(self, self.masterKey, '/projects/' + projectId + '/events/' + collection, null, callback);
 		},
 		remove: function(projectId, collection, callback) {
-			request.del(self.masterKey, '/projects/' + projectId + '/events/' + collection, callback);
+			KeenRequests.del.call(self, self.masterKey, '/projects/' + projectId + '/events/' + collection, callback);
 		}
 	};
 
@@ -133,7 +86,7 @@ function KeenApi(config) {
 			return;
 		}
 
-		request.post(this.writeKey, "/projects/" + this.projectId + "/events/" + eventCollection, event, callback);
+		KeenRequests.post.call(self, this.writeKey, "/projects/" + this.projectId + "/events/" + eventCollection, event, callback);
 	};
 
 	this.request = function(method, keyType, path, params, callback) {
@@ -147,11 +100,7 @@ function KeenApi(config) {
 			throw new Error('\'path\' must be a string.');
 		}
 
-		if (params && typeof params !== 'function') {
-			path += '?' + qs.stringify(params);
-		}
-
-		if ( ! request.hasOwnProperty(method)) {
+		if ( ! KeenRequests.hasOwnProperty(method)) {
 			throw new Error('Method must be of type: GET/POST/DEL');
 		}
 
@@ -164,10 +113,10 @@ function KeenApi(config) {
 		}
 
 		if(method === 'post' || method === 'get') {
-			return request[method](this[keyType], path, params, callback);
+			return KeenRequests[method].call(self, this[keyType], path, params, callback);
 		}
 
-		request[method](this[keyType], path, callback);
+		KeenRequests[method].call(self, this[keyType], path, callback);
 	};
 
 	this.addEvents = function(events, callback) {
@@ -182,13 +131,14 @@ function KeenApi(config) {
 			return;
 		}
 
-		request.post(this.writeKey, "/projects/" + this.projectId + "/events", events, callback);
+		KeenRequests.post.call(self, this.writeKey, "/projects/" + this.projectId + "/events", events, callback);
 	};
 
 	this.queries = {
 		extraction: function(projectId, collection, params, callback){
-			var path = '/projects/' + projectId + '/queries/extraction?event_collection=' + collection;
-			request.get(self.readKey, path, params, callback);
+			var requestParams = _.extend({}, params, { 'event_collection': collection });
+			var path = '/projects/' + projectId + '/queries/extraction';
+			KeenRequests.get.call(self, self.readKey, path, requestParams, callback);
 		}
 	};
 
