@@ -8,8 +8,8 @@ Keen IO is an online service to collect, analyze, and visualize your data.
 
 Use npm to install!
 
-```node
-`npm install keen.io`
+```javascript
+npm install keen.io
 ```
 
 ## Examples
@@ -20,7 +20,7 @@ Use npm to install!
 var Keen = require('keen.io');
 
 // Configure instance. Only projectId and writeKey are required to send data.
-var keen = Keen.configure({
+var client = Keen.configure({
 	projectId: "<project_id>",
 	writeKey: "<write_key>",
 	readKey: "<read_key>",
@@ -34,8 +34,8 @@ You can also have multiple instances if you are connecting to multiple KeenIO ac
 var Keen = require('keen.io');
 
 // Configure instance with API Key
-var keen1 = Keen.configure({...});
-var keen2 = Keen.configure({...});
+var client1 = Keen.configure({...});
+var client2 = Keen.configure({...});
 ```
 
 In the future there will be the ability to pass options into the initialisation such as batching inserts, etc. The structure of this hasn't been defined yet but will look something like the following.
@@ -44,7 +44,7 @@ In the future there will be the ability to pass options into the initialisation 
 var Keen = require('keen.io');
 
 // Configure instance with API Key and options
-var keen = Keen.configure({ 
+var client = Keen.configure({ 
 	projectId: "<project_id>",
 	batchEventInserts: 30 
 });
@@ -54,13 +54,13 @@ var keen = Keen.configure({
 
 ```javascript
 var Keen = require("keen.io");
-var keen = Keen.configure({
+var client = Keen.configure({
 	projectId: "<project_id>",
 	writeKey: "<write_key>"
 });
 
 // send single event to Keen IO
-keen.addEvent("my event collection", {"property name": "property value"}, function(err, res) {
+client.addEvent("my event collection", {"property name": "property value"}, function(err, res) {
 	if (err) {
 		console.log("Oh no, an error!");
 	} else {
@@ -69,7 +69,7 @@ keen.addEvent("my event collection", {"property name": "property value"}, functi
 });
 
 // send multiple events to Keen IO
-keen.addEvents({
+client.addEvents({
 	"my first event collection": [{"property name": "property value"}, ...],
 	"my second event collection": [{"property name2": "property value 2"}]
 }, function(err, res) {
@@ -94,7 +94,7 @@ var scopedKey = Keen.encryptScopedKey(apiKey, {
 		"property_value": "123"
 	}]
 });
-var keen = Keen.configure({
+var client = Keen.configure({
 	projectId: "<project_id>";
 	readKey: scopedKey
 });
@@ -116,7 +116,7 @@ var your_analysis = new Keen.Query(analysisType, params);
 
 ```
 var Keen = require('keen.io');
-var keen = Keen.configure({
+var client = Keen.configure({
   projectId: "your_project_id",
   readKey: "your_read_key"
 });
@@ -128,7 +128,7 @@ var count = new Keen.Query("count", {
 });
 
 // Send query
-keen.run(count, function(err, response){
+client.run(count, function(err, response){
   if (err) return console.log(err);
   // response.result
 });
@@ -198,7 +198,7 @@ var max_revenue = new Keen.Query("maximum", {
   group_by: "geo.country" 
 });
   
-var mashup = keen.run([avg_revenue, max_revenue], function(err, res){
+var mashup = client.run([avg_revenue, max_revenue], function(err, res){
   if (err) return console.log(err);
   // res[0].result or this.data[0] (avg_revenue)
   // res[1].result or this.data[1] (max_revenue)
