@@ -108,13 +108,13 @@ The `<Client>.run` method is available on each configured client instance to run
 
 **Format:**
 
-```
+```javascript
 var your_analysis = new Keen.Query(analysisType, params);
 ```
 
 ### Example Usage
 
-```
+```javascript
 var Keen = require('keen.io');
 var client = Keen.configure({
   projectId: "your_project_id",
@@ -161,7 +161,7 @@ All of the following analyses require an `event_collection` parameter. Some anal
 
 **A note about funnels:** funnels require a `steps` as an array of objects. Each step requires an `event_collection` and `actor_property` parameter.
 
-```
+```javascript
 var funfunfunnel = new Keen.Query('funnel', {
   steps: [
     {
@@ -186,7 +186,7 @@ The `<Client>.run` method accepts an individual analysis or array of analyses. I
 
 Query results are also attached to the query object itself, and can be referenced as `this.data`. 
 
-```
+```javascript
 var avg_revenue = new Keen.Query("average", { 
   event_collection: "purchase",
   target_property: "price",
@@ -208,7 +208,7 @@ var mashup = client.run([avg_revenue, max_revenue], function(err, res){
 
 ### Get/Set Parameters and Refresh Queries
 
-```
+```javascript
 // Based on previous example
 
 // Update parameters
