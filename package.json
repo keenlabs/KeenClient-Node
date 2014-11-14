@@ -60,7 +60,7 @@
     }
   ],
   "dependencies": {
-    "superagent": "~0.13.0",
+    "superagent": "~0.20.0",
     "underscore": "~1.5.2"
   },
   "devDependencies": {
