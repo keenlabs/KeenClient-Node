@@ -219,6 +219,22 @@ max_revenue.set({ timeframe: "this_21_days" });
 mashup.refresh();
 ```
 
+### Query timeouts
+
+```javascript
+// Specify a timeout in milliseconds
+var count = new Keen.Query("count", {
+  event_collection: "pageviews",
+  timeout: 1000
+});
+
+// When a query times out, an err is passed to the callback
+client.run(count, function(err, response){
+  if (err) return console.log(err);
+  // err.message == 'timeout of 1000ms exceeded'
+});
+```
+
 
 
 ## Future Updates
