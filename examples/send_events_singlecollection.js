@@ -9,7 +9,7 @@ var keen = keen.configure({
 
 // Construct same events
 var events = {
-	'log_tag_1_1': [		
+	'asset_log': [		
 	{ 
 		sensor: {
 			name:"blufi_1",
@@ -17,6 +17,11 @@ var events = {
 			location:"CNC_1"
 		},
 		tag: {
+			ibeacon: {
+				uuid: "11111111-2222-3333-4444-555555555555",
+				major: 1,
+				minor: 1
+			},
 			tx_power: -4,
 			provider:"stickNfind",
 			rx_rssi: -80,
@@ -33,6 +38,11 @@ var events = {
 			location:"CNC_2"
 		},
 		tag: {
+			ibeacon: {
+				uuid: "11111111-2222-3333-4444-555555555555",
+				major: 1,
+				minor: 1
+			},
 			tx_power: -4,
 			provider:"stickNfind",
 			rx_rssi: -54,
@@ -42,9 +52,6 @@ var events = {
 			//timestamp: new Date() // overwrite the recorded keen timestamp
 		}
 	},
-
-],
-'log_tag_1_2': [		
 	{ 
 		sensor: {
 			name:"blufi_1",
@@ -53,6 +60,11 @@ var events = {
 
 		},
 		tag: {
+			ibeacon: {
+				uuid: "11111111-2222-3333-4444-555555555555",
+				major: 1,
+				minor: 2
+			},
 			tx_power: -4,
 			provider:"stickNfind",
 			rx_rssi: -54,
@@ -69,6 +81,11 @@ var events = {
 			location:"CNC_2"
 		},
 		tag: {
+			ibeacon: {
+				uuid: "11111111-2222-3333-4444-555555555555",
+				major: 1,
+				minor: 2
+			},
 			tx_power: -4,
 			provider:"stickNfind",
 			rx_rssi: -60,
