@@ -1,3 +1,31 @@
+### Deprecation notice!
+
+We have consolidated our JS-powers with the release of [keen-js](https://github.com/keen/keen-js) v3.2 ([Release notes](https://github.com/keen/keen-js/releases/tag/v3.2.0)). All functionality from this project has been moved over, along with a bunch of new goodies.
+
+Install keen-js
+
+```ssh
+$ npm install keen-js
+```
+
+Minor changes in client instantiation:
+
+```javascript
+// change this...
+var client = Keen.configure({});
+
+// ...into this
+var client = new Keen({});
+```
+
+Scoped key en/decryption has also moved, but is documented [here](https://github.com/keen/keen-js/blob/master/docs/scoped-keys.md).
+
+This repo will remain active for documentation purposes, but all issues, feature requests, general questions, thoughts, concerns, hopes and dreams should all happen within the keen-js project going forward.
+
+If I've missed any important notes that would make the switch easier, please hit me with [an email](mailto:dustin@keen.io) or [a tweet](https://twitter.com/larimer)!
+
+* * *
+
 # Keen IO - NodeJS
 
 [![Build Status](https://travis-ci.org/keenlabs/KeenClient-Node.png?branch=master)](https://travis-ci.org/keenlabs/KeenClient-Node)
