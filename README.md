@@ -26,6 +26,8 @@ If I've missed any important notes that would make the switch easier, please hit
 
 * * *
 
+*_Documentation below is for the original (now deprecated) KeenClient-Node SDK_*
+
 # Keen IO - NodeJS
 
 [![Build Status](https://travis-ci.org/keenlabs/KeenClient-Node.png?branch=master)](https://travis-ci.org/keenlabs/KeenClient-Node)
