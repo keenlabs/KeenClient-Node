@@ -503,6 +503,19 @@ describe("keen", function() {
 
             describe('Multiple analyses', function(){
 
+              it('should invoke the error callback only once', function(done){
+                var mockResponse = { result: 1 };
+                mockGetRequest(query_path, 401, mockResponse);
+                mockGetRequest(query_path, 401, mockResponse);
+                analysis.params = {};
+                var test = keen.run([analysis, analysis, analysis], function(err, res){
+                  (err === null).should.be.false;
+                  (res === null).should.be.true;
+
+                  done();
+                });
+              });
+
               it('should return a single response when successful', function(done){
                 var mockResponse = { result: 1 };
                 mockGetRequest(query_path, 200, mockResponse);
