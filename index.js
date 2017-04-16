@@ -67,7 +67,15 @@ function KeenApi(config) {
 
 	this.collections = {
 		view: function(projectId, collection, callback) {
-			KeenRequests.get.call(self, self.masterKey, '/projects/' + projectId + '/events/' + collection, null, callback);
+			// Make collection argument optional so that the Events Resource can be properly
+			// queried, as specified in the docs.
+			if (collection && !/^\//.test(collection)) {
+				collection = '/' + collection;
+			} else {
+				// Make sure falsey values are assigned to a string.
+				collection = '';
+			}
+			KeenRequests.get.call(self, self.masterKey, '/projects/' + projectId + '/events' + collection, null, callback);
 		},
 		remove: function(projectId, collection, callback) {
 			KeenRequests.del.call(self, self.masterKey, '/projects/' + projectId + '/events/' + collection, callback);
