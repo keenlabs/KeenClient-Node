@@ -9,7 +9,7 @@ var keen = keen.configure({
 
 // Construct same events
 var events = {
-	'log_tag_1_1': [		
+	'asset_log': [		
 	{ 
 		sensor: {
 			name:"blufi_1",
@@ -17,64 +17,93 @@ var events = {
 			location:"CNC_1"
 		},
 		tag: {
-			tx_power: -4,
-			provider:"stickNfind",
-			rx_rssi: -80,
-			sdkversion: "android vercion 1"
-		},
-		keen: {
-			//timestamp: new Date() // overwrite the recorded keen timestamp
-		}
-	},
-	{ 
-		sensor: {
-			name:"blufi_2",
-			version:"1.0",
-			location:"CNC_2"
-		},
-		tag: {
-			tx_power: -4,
-			provider:"stickNfind",
-			rx_rssi: -54,
-			version: "2.1"
-		},
-		keen: {
-			//timestamp: new Date() // overwrite the recorded keen timestamp
-		}
-	},
-
-],
-'log_tag_1_2': [		
-	{ 
-		sensor: {
-			name:"blufi_1",
-			version:"1.0",
-			location:"CNC_1"
-
-		},
-		tag: {
-			tx_power: -4,
-			provider:"stickNfind",
-			rx_rssi: -54,
-			sdkversion: "android vercion 1"
-		},
-		keen: {
-			//timestamp: new Date() // overwrite the recorded keen timestamp
-		}
-	},
-	{ 
-		sensor: {
-			name:"blufi_2",
-			version:"1.0",
-			location:"CNC_2"
-		},
-		tag: {
+			ibeacon: {
+				uuid: "11111111-2222-3333-4444-555555555555",
+				major: 1,
+				minor: 2
+			},
 			tx_power: -4,
 			provider:"stickNfind",
 			rx_rssi: -60,
+			sdkversion: "android vercion 1"
+		},
+		keen: {
+			"location": {
+            "coordinates": [45.393904, -72.761597]
+        	}
+			//timestamp: new Date() // overwrite the recorded keen timestamp
+		}
+	},
+	{ 
+		sensor: {
+			name:"blufi_2",
+			version:"1.0",
+			location:"CNC_2"
+		},
+		tag: {
+			ibeacon: {
+				uuid: "11111111-2222-3333-4444-555555555555",
+				major: 1,
+				minor: 2
+			},
+			tx_power: -4,
+			provider:"stickNfind",
+			rx_rssi: -73,
 			version: "2.1"
 		},
 		keen: {
+			"location": {
+            "coordinates": [45.393701, -72.761543]
+        	}
+			//timestamp: new Date() // overwrite the recorded keen timestamp
+		}
+	},
+	{ 
+		sensor: {
+			name:"blufi_1",
+			version:"1.0",
+			location:"CNC_1"
+
+		},
+		tag: {
+			ibeacon: {
+				uuid: "11111111-2222-3333-4444-555555555555",
+				major: 1,
+				minor: 2
+			},
+			tx_power: -4,
+			provider:"stickNfind",
+			rx_rssi: -58,
+			sdkversion: "android vercion 1"
+		},
+		keen: {
+			"location": {
+            "coordinates": [45.393904, -72.761597]
+        	}
+			//timestamp: new Date() // overwrite the recorded keen timestamp
+		}
+	},
+	{ 
+		sensor: {
+			name:"blufi_2",
+			version:"1.0",
+			location:"CNC_2"
+		},
+		tag: {
+			ibeacon: {
+				uuid: "11111111-2222-3333-4444-555555555555",
+				major: 1,
+				minor: 2
+			},
+			tx_power: -4,
+			provider:"stickNfind",
+			rx_rssi: -101,
+			version: "2.1"
+		},
+		keen: {
+			"location": {
+            "coordinates": [45.393701, -72.761543]
+        	}
 			//timestamp: new Date() // overwrite the recorded keen timestamp
 		}
 	},
