@@ -118,9 +118,11 @@ describe("keen", function() {
         .reply(responseCode, responseBody, {"Content-Type": "application/json"});
     };
 
-    var mockGetRequest = function(path, responseCode, responseBody) {
+    var mockGetRequest = function(path, responseCode, responseBody, delay) {
+        delay = delay || 0;
         nock("https://api.keen.io")
         .get(path)
+        .delay(delay)
         .reply(responseCode, responseBody, {"Content-Type": "application/json"});
     };
 
@@ -255,6 +257,14 @@ describe("keen", function() {
                     (err === null).should.be.true;
                     res.should.eql(mockResponse);
                 });
+            });
+
+            it('times out', function() {
+              mockGetRequest("/"+ apiVersion +"/projects/"+projectId+"/queries/count?event_collection=bar", 200, mockResponse, 1000);
+              keen.request('get', 'read', '/queries/count', {event_collection:'bar', timeout: 1}, function(error) {
+                should.exist(error);
+                error.message.should.equal("timeout of 1ms exceeded");
+              });
             });
         });
     });
